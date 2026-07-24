@@ -1,0 +1,3211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quick Wit — Speak on the Spot</title>
+<style>
+  :root {
+    --bg: #0b0e17;
+    --panel: #141927;
+    --panel-2: #1b2236;
+    --line: #262f4a;
+    --text: #e8ecf8;
+    --muted: #8b95b5;
+    --accent: #7c5cff;
+    --accent-2: #00d4ff;
+    --good: #2dd4a7;
+    --warn: #ffb020;
+    --bad: #ff5470;
+    --grad: linear-gradient(135deg, #7c5cff, #00d4ff);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(900px 500px at 85% -10%, rgba(124,92,255,.14), transparent 60%),
+      radial-gradient(700px 400px at -10% 110%, rgba(0,212,255,.10), transparent 60%);
+  }
+  #app { max-width: 760px; margin: 0 auto; padding: 20px 16px 48px; min-height: 100%; }
+
+  .screen { display: none; animation: fadeUp .35s ease both; }
+  .screen.active { display: block; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- shared bits ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: 0; border-radius: 14px; cursor: pointer;
+    font: 700 16px/1 inherit; color: #fff;
+    padding: 15px 26px;
+    background: var(--grad);
+    box-shadow: 0 6px 24px rgba(124,92,255,.35);
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s;
+  }
+  .btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+  .btn:active { transform: translateY(0); }
+  .btn.ghost {
+    background: var(--panel-2); box-shadow: none; border: 1px solid var(--line); color: var(--text);
+  }
+  .btn.danger { background: linear-gradient(135deg, #ff5470, #ff8a5c); box-shadow: 0 6px 24px rgba(255,84,112,.3); }
+  .btn:disabled { opacity: .5; cursor: default; transform: none; }
+  .kbd { font: 600 11px/1 inherit; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; background: var(--panel); }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 18px; padding: 20px;
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 600; color: var(--muted);
+  }
+  .pill b { color: var(--text); }
+
+  /* ---------- topbar ---------- */
+  #topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 22px; flex-wrap: wrap; }
+  #topbar .stats { display: flex; gap: 8px; flex-wrap: wrap; }
+  #logo { font-size: 22px; font-weight: 800; letter-spacing: .3px; cursor: pointer; }
+  #logo span { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  #xpbarWrap { height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden; margin-top: 10px; border: 1px solid var(--line); }
+  #xpbar { height: 100%; width: 0%; background: var(--grad); border-radius: 99px; transition: width .6s ease; }
+
+  /* ---------- home ---------- */
+  .hero { text-align: center; padding: 26px 10px 30px; }
+  .hero h1 { font-size: 40px; font-weight: 800; line-height: 1.15; }
+  .hero h1 em { font-style: normal; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p { color: var(--muted); margin-top: 10px; font-size: 16px; }
+  #modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 10px; }
+  .mode-card {
+    text-align: left; cursor: pointer; position: relative; overflow: hidden;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 20px;
+    transition: transform .15s ease, border-color .15s ease, box-shadow .15s;
+  }
+  .mode-card:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 10px 30px rgba(124,92,255,.18); }
+  .mode-card .emoji { font-size: 30px; }
+  .mode-card h3 { margin: 10px 0 6px; font-size: 19px; }
+  .mode-card p { color: var(--muted); font-size: 14px; line-height: 1.5; }
+  .mode-card .meta { margin-top: 12px; font-size: 12px; font-weight: 700; color: var(--accent-2); letter-spacing: .5px; }
+  #homeFooter { display: flex; justify-content: center; gap: 10px; margin-top: 22px; }
+
+  /* ---------- prep / round ---------- */
+  .roundWrap { text-align: center; }
+  .modeTag { font-size: 13px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent-2); }
+  #promptBox {
+    font-size: 26px; font-weight: 800; line-height: 1.35; margin: 18px auto 8px; max-width: 640px; min-height: 70px;
+  }
+  #promptSub { color: var(--muted); font-size: 15px; margin-bottom: 8px; min-height: 22px; }
+  #prepCount { font-size: 90px; font-weight: 800; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; animation: pop .5s ease; }
+  @keyframes pop { from { transform: scale(1.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  #timerWrap { position: relative; width: 190px; height: 190px; margin: 14px auto; }
+  #timerWrap svg { transform: rotate(-90deg); }
+  #timerNum { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 52px; font-weight: 800; }
+  #ring { transition: stroke .3s; }
+  .mic-live { display: inline-flex; align-items: center; gap: 8px; color: var(--good); font-weight: 700; font-size: 14px; }
+  .mic-live .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--good); animation: pulse 1.2s infinite; }
+  .mic-dead { color: var(--warn); font-weight: 700; font-size: 14px; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(45,212,167,.6);} 50% { box-shadow: 0 0 0 9px rgba(45,212,167,0);} }
+  #liveTranscript {
+    margin: 16px auto 0; max-width: 640px; text-align: left;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 14px 16px; min-height: 84px; max-height: 150px; overflow-y: auto;
+    color: var(--muted); font-size: 15px; line-height: 1.6;
+  }
+  #liveTranscript .interim { color: var(--accent-2); }
+  #roundControls { margin-top: 18px; display: flex; justify-content: center; gap: 10px; }
+  #flipBanner { font-size: 42px; font-weight: 800; padding: 60px 0; animation: pop .4s ease; }
+  #flipBanner small { display: block; font-size: 16px; color: var(--muted); margin-top: 12px; font-weight: 600; }
+
+  /* ---------- feedback ---------- */
+  #gradeBig { font-size: 96px; font-weight: 800; line-height: 1; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  #scoreLine { font-size: 20px; font-weight: 700; margin-top: 4px; }
+  #coachSay { color: var(--muted); margin-top: 8px; font-size: 16px; max-width: 560px; margin-inline: auto; line-height: 1.5; }
+  .bars { margin-top: 22px; display: grid; gap: 12px; text-align: left; }
+  .bar-row .lbl { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .bar-row .lbl span:last-child { color: var(--muted); font-weight: 600; }
+  .bar-track { height: 10px; background: var(--panel-2); border-radius: 99px; overflow: hidden; border: 1px solid var(--line); }
+  .bar-fill { height: 100%; border-radius: 99px; background: var(--grad); width: 0; transition: width .8s cubic-bezier(.2,.8,.2,1); }
+  #tipBox { margin-top: 18px; text-align: left; border-left: 4px solid var(--warn); background: rgba(255,176,32,.07); border-radius: 0 12px 12px 0; padding: 13px 16px; font-size: 15px; line-height: 1.5; }
+  #tipBox b { color: var(--warn); }
+  #fbTranscript { margin-top: 16px; text-align: left; font-size: 14px; line-height: 1.7; color: var(--muted); max-height: 180px; overflow-y: auto; }
+  #fbTranscript mark { background: rgba(255,84,112,.25); color: #ffb3c1; border-radius: 4px; padding: 0 3px; font-weight: 700; }
+  #xpGain { margin-top: 14px; font-weight: 800; color: var(--good); font-size: 15px; }
+  #newBadges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+  .badge-pop { background: var(--panel-2); border: 1px solid var(--accent); border-radius: 12px; padding: 8px 14px; font-size: 13px; font-weight: 700; animation: pop .5s ease; }
+  #fbButtons { display: flex; justify-content: center; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+
+  /* AI coaching panel */
+  .coach-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .coach-links .btn { text-decoration: none; padding: 11px 22px; font-size: 14px; }
+  #coachStatus { color: var(--good); }
+  #coachText {
+    display: none; width: 100%; margin-top: 12px; min-height: 150px; resize: vertical;
+    background: var(--bg); color: var(--muted); border: 1px solid var(--line);
+    border-radius: 10px; padding: 12px; font: 400 12px/1.5 ui-monospace, Consolas, monospace;
+  }
+  #coachText.on { display: block; }
+
+  /* AI coach (live API) */
+  #aiCoachPanel { margin-top: 22px; text-align: left; }
+  .ai-coach-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .ai-coach-head h3 { font-size: 16px; }
+  .spinner {
+    width: 18px; height: 18px; border-radius: 50%; flex: 0 0 auto;
+    border: 3px solid var(--panel-2); border-top-color: var(--accent-2);
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .md { font-size: 15px; line-height: 1.65; }
+  .md .md-h { display: block; font-weight: 800; color: var(--accent-2); margin: 14px 0 4px; }
+  .md .md-h:first-child { margin-top: 0; }
+  .md ul { margin: 4px 0 8px 20px; }
+  .md li { margin: 3px 0; }
+  #aiCoachErr { color: var(--bad); font-size: 14px; }
+
+  /* settings */
+  .keyInput {
+    width: 100%; padding: 12px 14px; border-radius: 10px;
+    background: var(--bg); color: var(--text); border: 1px solid var(--line);
+    font: 400 13px/1.4 ui-monospace, Consolas, monospace;
+  }
+  .keyInput:focus { outline: none; border-color: var(--accent); }
+  #keyStatus { font-size: 14px; margin-top: 10px; min-height: 20px; }
+
+  /* prep-for-real-life type chips */
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    background: var(--panel-2); border: 1px solid var(--line); color: var(--muted);
+    border-radius: 999px; padding: 9px 15px; font: 600 13px/1 inherit;
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--text); }
+  .chip.sel { border-color: var(--accent); color: var(--text); background: rgba(124,92,255,.18); }
+
+  /* section headers on the home page */
+  .section-head { display: flex; align-items: center; gap: 12px; margin: 30px 4px 14px; }
+  .section-head h2 { font-size: 14px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text); white-space: nowrap; }
+  .section-head .sh-sub { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .section-head::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
+
+  /* "deep practice" feature cards — larger, premium feel */
+  .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+  .feature-card {
+    text-align: left; cursor: pointer; position: relative; overflow: hidden;
+    border: 1px solid var(--line); border-radius: 18px; padding: 22px;
+    background: rgba(20,25,39,.66); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    transition: transform .15s ease, border-color .15s ease, box-shadow .15s;
+  }
+  .feature-card:hover { transform: translateY(-4px); }
+  .feature-card::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(460px 220px at 50% -20%, var(--fc-glow, rgba(124,92,255,.16)), transparent 70%);
+    opacity: 0; transition: opacity .25s;
+  }
+  .feature-card:hover::after { opacity: 1; }
+  .fc-badge {
+    display: inline-flex; width: 54px; height: 54px; align-items: center; justify-content: center;
+    font-size: 28px; border-radius: 15px; margin-bottom: 14px;
+    background: var(--fc-badge-bg, rgba(124,92,255,.15)); border: 1px solid var(--fc-badge-bd, rgba(124,92,255,.35));
+  }
+  .feature-card h3 { font-size: 20px; margin-bottom: 8px; }
+  .feature-card p { color: var(--muted); font-size: 14px; line-height: 1.55; }
+  .feature-card .meta { margin-top: 14px; font-size: 12px; font-weight: 700; color: var(--fc-meta, var(--accent-2)); letter-spacing: .5px; }
+  .feature-card.prep { --fc-glow: rgba(124,92,255,.18); --fc-badge-bg: rgba(124,92,255,.15); --fc-badge-bd: rgba(124,92,255,.4); --fc-meta: var(--accent); }
+  .feature-card.prep:hover { border-color: var(--accent); box-shadow: 0 12px 34px rgba(124,92,255,.16); }
+  .feature-card.talk { --fc-glow: rgba(0,212,255,.16); --fc-badge-bg: rgba(0,212,255,.12); --fc-badge-bd: rgba(0,212,255,.35); --fc-meta: var(--accent-2); }
+  .feature-card.talk:hover { border-color: var(--accent-2); box-shadow: 0 12px 34px rgba(0,212,255,.14); }
+
+  /* daily challenge card */
+  .mode-card.daily { border-color: rgba(255,176,32,.5); }
+  .mode-card.daily::before { background: linear-gradient(135deg, #ffb020, #ff5470); opacity: .7; }
+  .mode-card.daily:hover { border-color: var(--warn); box-shadow: 0 10px 30px rgba(255,176,32,.15); }
+  .mode-card.daily.done { opacity: .65; }
+
+  /* hear-yourself-back playback */
+  #playbackBody audio { width: 100%; height: 40px; }
+  .pb-lbl { font-size: 12px; font-weight: 700; color: var(--accent-2); letter-spacing: .5px; text-transform: uppercase; margin-bottom: 4px; }
+  .pb-mini {
+    margin-left: 8px; width: 26px; height: 26px; border-radius: 50%; border: 0; cursor: pointer;
+    background: rgba(255,255,255,.22); color: #fff; font-size: 11px; line-height: 1;
+    vertical-align: middle; flex: 0 0 auto;
+  }
+  .pb-mini:hover { background: rgba(255,255,255,.35); }
+
+  /* small talk trainer */
+  .track-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 18px; }
+  .lesson-row {
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; cursor: pointer;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px;
+    color: var(--text); font: inherit; transition: border-color .15s, transform .15s;
+  }
+  .lesson-row:hover { border-color: var(--accent); transform: translateX(3px); }
+  .lesson-row .le { font-size: 22px; }
+  .lesson-row .lt { font-weight: 700; font-size: 15px; }
+  .lesson-row .ld { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .lesson-row .check { margin-left: auto; color: var(--good); font-weight: 800; }
+  #lessonBody { text-align: left; margin-top: 16px; }
+
+  /* simulator chat */
+  #chatLog {
+    display: flex; flex-direction: column; gap: 10px; text-align: left;
+    max-height: 46vh; overflow-y: auto; padding: 4px 2px; margin-top: 14px;
+  }
+  .bubble { padding: 10px 14px; border-radius: 14px; max-width: 86%; font-size: 15px; line-height: 1.5; }
+  .bubble.them { background: var(--panel-2); border: 1px solid var(--line); align-self: flex-start; border-bottom-left-radius: 4px; }
+  .bubble.me { background: linear-gradient(135deg, rgba(124,92,255,.85), rgba(0,212,255,.7)); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .bubble.sys { background: none; color: var(--muted); font-size: 13px; align-self: center; text-align: center; }
+  /* interest meter */
+  #simMeter { margin-top: 14px; text-align: left; }
+  .mtr-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; font-weight: 700; letter-spacing: .3px; margin-bottom: 6px; }
+  #mtrLabel { color: var(--muted); text-transform: uppercase; }
+  #mtrVal { font-size: 15px; font-weight: 800; transition: color .3s; }
+  .mtr-track { height: 12px; border-radius: 20px; background: var(--panel-2); border: 1px solid var(--line); overflow: hidden; }
+  .mtr-fill { height: 100%; width: 42%; border-radius: 20px; transition: width .6s cubic-bezier(.22,1,.36,1), background .5s; }
+  .mtr-note { margin-top: 7px; font-size: 13px; font-weight: 700; min-height: 18px; text-align: center;
+    border-top: 1px dashed var(--line); padding-top: 7px; color: var(--muted); opacity: 0; transition: opacity .3s; }
+  .mtr-note.show { opacity: 1; }
+  .mtr-note.up { color: var(--good); }
+  .mtr-note.down { color: var(--bad); }
+  #simLive {
+    margin-top: 12px; text-align: left; background: var(--panel); border: 1px dashed var(--accent);
+    border-radius: 12px; padding: 12px 14px; min-height: 48px; font-size: 15px; color: var(--muted);
+  }
+  #simControls { display: flex; justify-content: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  #simCoachOut { margin-top: 18px; text-align: left; }
+
+  /* self-rating fallback */
+  #stars { display: flex; justify-content: center; gap: 8px; margin: 18px 0; }
+  #stars button { font-size: 38px; background: none; border: 0; cursor: pointer; filter: grayscale(1) opacity(.45); transition: filter .1s, transform .1s; }
+  #stars button.on { filter: none; transform: scale(1.12); }
+
+  /* ---------- stats ---------- */
+  .statgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
+  .stat-tile { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; text-align: center; }
+  .stat-tile .num { font-size: 28px; font-weight: 800; }
+  .stat-tile .cap { color: var(--muted); font-size: 12px; font-weight: 700; margin-top: 4px; letter-spacing: .4px; text-transform: uppercase; }
+  #sparkCard h3, #badgesCard h3, #bestCard h3 { font-size: 15px; margin-bottom: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+  #badgeGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .badge { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--panel-2); }
+  .badge.locked { opacity: .35; filter: grayscale(1); }
+  .badge .bi { font-size: 22px; }
+  .badge .bn { font-weight: 700; font-size: 13px; margin-top: 6px; }
+  .badge .bd { color: var(--muted); font-size: 11.5px; margin-top: 3px; line-height: 1.4; }
+  #bestGrid { display: grid; gap: 8px; }
+  .best-row { display: flex; justify-content: space-between; font-size: 14px; padding: 8px 4px; border-bottom: 1px solid var(--line); }
+  .best-row:last-child { border-bottom: 0; }
+  .best-row b { font-size: 15px; }
+
+  /* mic warning banner */
+  #micBanner {
+    display: none; margin-bottom: 16px; padding: 13px 16px; border-radius: 12px;
+    background: rgba(255,176,32,.1); border: 1px solid rgba(255,176,32,.4); font-size: 14px; line-height: 1.5;
+  }
+
+  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+
+  .urgent #ring { stroke: var(--bad) !important; }
+  .urgent #timerNum { color: var(--bad); animation: tick .5s infinite alternate; }
+  @keyframes tick { from { transform: scale(1); } to { transform: scale(1.06); } }
+
+  @media (max-width: 520px) {
+    .hero h1 { font-size: 30px; }
+    #promptBox { font-size: 21px; }
+    #gradeBig { font-size: 72px; }
+  }
+
+  /* ================== visual polish: aurora, stars, glass ================== */
+  #bgfx { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+  #bgfx .blob {
+    position: absolute; border-radius: 50%;
+    filter: blur(90px); will-change: transform;
+  }
+  #bgfx .b1 {
+    width: 620px; height: 620px; top: -200px; left: -140px; opacity: .5;
+    background: radial-gradient(circle at 35% 35%, #7c5cff, transparent 68%);
+    animation: drift1 26s ease-in-out infinite alternate;
+  }
+  #bgfx .b2 {
+    width: 680px; height: 680px; bottom: -240px; right: -180px; opacity: .38;
+    background: radial-gradient(circle at 60% 40%, #00d4ff, transparent 68%);
+    animation: drift2 34s ease-in-out infinite alternate;
+  }
+  #bgfx .b3 {
+    width: 460px; height: 460px; top: 38%; left: 58%; opacity: .22;
+    background: radial-gradient(circle at 50% 50%, #ff5ce1, transparent 68%);
+    animation: drift3 40s ease-in-out infinite alternate;
+  }
+  @keyframes drift1 { to { transform: translate(150px, 100px) scale(1.15); } }
+  @keyframes drift2 { to { transform: translate(-130px, -90px) scale(1.1); } }
+  @keyframes drift3 { to { transform: translate(-170px, 70px) scale(.88); } }
+
+  #bgfx .stars, #bgfx .stars2 {
+    position: absolute; inset: -60% -20% -20% -20%;
+    background-image:
+      radial-gradient(1.6px 1.6px at 22% 31%, rgba(255,255,255,.8), transparent 100%),
+      radial-gradient(1.2px 1.2px at 68% 12%, rgba(255,255,255,.6), transparent 100%),
+      radial-gradient(1.4px 1.4px at 44% 68%, rgba(200,220,255,.7), transparent 100%),
+      radial-gradient(1px 1px at 85% 52%, rgba(255,255,255,.5), transparent 100%),
+      radial-gradient(1.3px 1.3px at 9% 84%, rgba(180,240,255,.6), transparent 100%),
+      radial-gradient(1px 1px at 57% 43%, rgba(255,255,255,.45), transparent 100%);
+    background-repeat: repeat; background-size: 560px 560px;
+    opacity: .45; animation: starDrift 160s linear infinite;
+  }
+  #bgfx .stars2 {
+    background-size: 780px 780px; opacity: .3;
+    animation: starDrift 220s linear infinite reverse, twinkle 7s ease-in-out infinite alternate;
+  }
+  @keyframes starDrift { to { transform: translate(360px, 260px); } }
+  @keyframes twinkle { from { opacity: .12; } to { opacity: .4; } }
+
+  /* glass panels — let the aurora glow through */
+  .card, .mode-card, .lesson-row, #liveTranscript, .stat-tile, #simLive {
+    background: rgba(20, 25, 39, .66);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  }
+  .pill, .bubble.them, .badge {
+    background: rgba(27, 34, 54, .6);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  }
+
+  /* mode cards: gradient top edge + hover glow */
+  .mode-card::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--grad); opacity: .55; transition: opacity .2s;
+  }
+  .mode-card:hover::before { opacity: 1; }
+  .mode-card::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(420px 200px at 50% -20%, rgba(124,92,255,.16), transparent 70%);
+    opacity: 0; transition: opacity .25s;
+  }
+  .mode-card:hover::after { opacity: 1; }
+
+  /* hero: shifting gradient + glow */
+  .hero h1 em {
+    background: linear-gradient(90deg, #7c5cff, #00d4ff, #ff5ce1, #7c5cff);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: heroShift 9s linear infinite;
+    filter: drop-shadow(0 0 26px rgba(124,92,255,.35));
+  }
+  @keyframes heroShift { to { background-position: 300% 0; } }
+  #logo span { filter: drop-shadow(0 0 12px rgba(0,212,255,.45)); }
+
+  /* glow accents */
+  #timerWrap svg { filter: drop-shadow(0 0 18px rgba(124,92,255,.35)); }
+  #gradeBig { filter: drop-shadow(0 0 30px rgba(124,92,255,.4)); }
+  #prepCount { filter: drop-shadow(0 0 24px rgba(0,212,255,.35)); }
+
+  @media (prefers-reduced-motion: reduce) {
+    #bgfx .blob, #bgfx .stars, #bgfx .stars2, .hero h1 em { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div id="bgfx" aria-hidden="true">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+  <div class="stars"></div>
+  <div class="stars2"></div>
+</div>
+<canvas id="confetti"></canvas>
+<div id="app">
+
+  <div id="topbar">
+    <div id="logo" onclick="goHome()">🎙️ Quick<span>Wit</span></div>
+    <div class="stats">
+      <div class="pill">🔥 <b id="streakNum">0</b>&nbsp;day streak</div>
+      <div class="pill">⭐ Level <b id="levelNum">1</b></div>
+      <div class="pill">🏅 <b id="xpNum">0</b>&nbsp;XP</div>
+      <button class="pill" style="cursor:pointer;" onclick="showSettings()" title="Settings">⚙️</button>
+    </div>
+  </div>
+  <div id="xpbarWrap"><div id="xpbar"></div></div>
+
+  <div id="micBanner"></div>
+
+  <!-- ============ HOME ============ -->
+  <section id="scr-home" class="screen active">
+    <div class="hero">
+      <h1>Speak on the spot.<br><em>Get scarily good at it.</em></h1>
+      <p>Pick a challenge, think for a few seconds, then talk. Your mic listens and scores you like a coach.</p>
+    </div>
+    <!-- today's spotlight -->
+    <div id="dailyCard"></div>
+    <div id="focusBanner"></div>
+
+    <!-- quick rounds -->
+    <div class="section-head"><h2>⚡ Quick Rounds</h2><span class="sh-sub">60-second speaking games</span></div>
+    <div id="modes"></div>
+
+    <!-- deep practice -->
+    <div class="section-head"><h2>🎓 Deep Practice</h2><span class="sh-sub">Guided, AI-powered training</span></div>
+    <div class="feature-grid">
+      <button class="feature-card prep" onclick="showPrep()">
+        <span class="fc-badge">🎯</span>
+        <h3>Prep for Real Life</h3>
+        <p>Got an interview, a speech, a pitch, a date? Describe it — the AI builds the exact hard moment you're afraid of, you rehearse it out loud, and the coach preps you for the real thing.</p>
+        <div class="meta">YOUR SITUATION · AI-BUILT CHALLENGE</div>
+      </button>
+      <button class="feature-card talk" onclick="showTracks()">
+        <span class="fc-badge">🗣️</span>
+        <h3>Small Talk Trainer</h3>
+        <p>Lessons, drills and a live AI conversation partner. Everyday chat, dates, and business networking — become the person who's easy to talk to.</p>
+        <div class="meta">LESSONS · DRILLS · LIVE SIMULATOR</div>
+      </button>
+    </div>
+
+    <div id="homeFooter">
+      <button class="btn ghost" onclick="showStats()">📈 My Progress</button>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section id="scr-settings" class="screen">
+    <h2 style="margin-bottom:6px;">⚙️ Settings</h2>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:16px;">One key unlocks the real AI coach and the small talk simulator.</p>
+    <div class="card" style="text-align:left;">
+      <h3 style="font-size:16px;margin-bottom:6px;">🧠 Claude API key</h3>
+      <p style="color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:12px;">
+        Create a key at <b>console.anthropic.com</b> → API keys, paste it here. It's stored only in this browser
+        (localStorage) and sent only to Anthropic when you ask for coaching. Typical cost: ~1–3¢ per coaching, a fraction of a cent per simulator reply.
+      </p>
+      <input id="keyInput" class="keyInput" type="password" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+        <button class="btn" onclick="saveKey()">💾 Save</button>
+        <button class="btn ghost" onclick="testKey()">🔌 Test key</button>
+        <button class="btn ghost" onclick="clearKey()">🗑️ Remove</button>
+      </div>
+      <div id="keyStatus"></div>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:20px;">
+      <button class="btn ghost" onclick="goHome()">← Back</button>
+    </div>
+  </section>
+
+  <!-- ============ PREP FOR REAL LIFE ============ -->
+  <section id="scr-preplife" class="screen">
+    <h2 style="margin-bottom:4px;">🎯 Prep for Real Life</h2>
+    <p style="color:var(--muted);font-size:14px;">Describe what's coming up. The AI builds the exact hard moment — the question you're afraid of, not a softball — and coaches you for the real thing.</p>
+    <div class="card" style="text-align:left;margin-top:16px;">
+      <h3 style="font-size:15px;margin-bottom:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;">What kind of situation?</h3>
+      <div id="realTypes" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+      <h3 style="font-size:15px;margin:18px 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;">Describe your actual situation</h3>
+      <textarea id="realDesc" class="keyInput" rows="3" style="font:inherit;font-size:14px;resize:vertical;" placeholder=""></textarea>
+      <div style="display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap;">
+        <button class="btn" id="realBuildBtn" onclick="buildRealChallenge()">⚡ Build my challenge</button>
+        <span id="realStatus" style="font-size:14px;color:var(--muted);"></span>
+      </div>
+    </div>
+    <div id="realRecentWrap" style="display:none;margin-top:14px;">
+      <h3 style="font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;text-align:left;">Keep practicing</h3>
+      <div id="realRecent" style="display:grid;gap:8px;"></div>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:20px;">
+      <button class="btn ghost" onclick="goHome()">← Back</button>
+    </div>
+  </section>
+
+  <!-- ============ SMALL TALK: TRACKS ============ -->
+  <section id="scr-tracks" class="screen">
+    <h2 style="margin-bottom:4px;">🗣️ Small Talk Trainer</h2>
+    <p style="color:var(--muted);font-size:14px;">Pick your arena. Each track has bite-size lessons, speaking drills, and a live AI conversation partner.</p>
+    <div class="track-grid" id="trackGrid"></div>
+    <div id="tracksKeyNote" style="display:none;margin-top:16px;padding:13px 16px;border-radius:12px;background:rgba(255,176,32,.1);border:1px solid rgba(255,176,32,.4);font-size:14px;line-height:1.5;text-align:left;">
+      💡 Lessons work right away. The <b>AI coach grading</b> and the <b>live simulator</b> need a Claude API key —
+      <a href="#" onclick="showSettings();return false;" style="color:var(--accent-2);">add one in Settings</a>. Without it, drills fall back to copy-paste coaching.
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:20px;">
+      <button class="btn ghost" onclick="goHome()">← Back</button>
+    </div>
+  </section>
+
+  <!-- ============ SMALL TALK: LESSON LIST ============ -->
+  <section id="scr-lessons" class="screen">
+    <div class="modeTag" id="lessonsTag" style="text-align:center;"></div>
+    <h2 id="lessonsTitle" style="text-align:center;margin-top:6px;"></h2>
+    <p id="lessonsSub" style="color:var(--muted);font-size:14px;text-align:center;margin-top:4px;"></p>
+    <div style="display:grid;gap:10px;margin-top:18px;" id="lessonList"></div>
+    <div style="display:flex;justify-content:center;gap:10px;margin-top:20px;">
+      <button class="btn" onclick="startSim()">🎭 Live simulator</button>
+      <button class="btn ghost" onclick="showTracks()">← Tracks</button>
+    </div>
+  </section>
+
+  <!-- ============ SMALL TALK: SINGLE LESSON ============ -->
+  <section id="scr-lesson" class="screen">
+    <div class="modeTag" id="lessonTag" style="text-align:center;"></div>
+    <h2 id="lessonTitle" style="text-align:center;margin-top:6px;"></h2>
+    <div class="card" id="lessonBody"></div>
+    <div style="display:flex;justify-content:center;gap:10px;margin-top:20px;flex-wrap:wrap;">
+      <button class="btn" id="lessonDrillBtn">🎤 Practice this now</button>
+      <button class="btn ghost" onclick="showLessons(currentTrackKey)">← Lessons</button>
+    </div>
+  </section>
+
+  <!-- ============ SMALL TALK: SIMULATOR ============ -->
+  <section id="scr-sim" class="screen">
+    <div class="modeTag" id="simTag" style="text-align:center;"></div>
+    <h2 style="text-align:center;margin-top:6px;font-size:20px;" id="simScene"></h2>
+    <div id="simMeter" style="display:none;">
+      <div class="mtr-top"><span id="mtrLabel"></span><span id="mtrVal"></span></div>
+      <div class="mtr-track"><div id="mtrFill" class="mtr-fill"></div></div>
+      <div id="mtrNote" class="mtr-note"></div>
+    </div>
+    <div id="chatLog"></div>
+    <div id="simLive" style="display:none;"></div>
+    <div id="simControls"></div>
+    <div class="card md" id="simCoachOut" style="display:none;"></div>
+    <div style="display:flex;justify-content:center;gap:10px;margin-top:18px;">
+      <button class="btn ghost" onclick="showLessons(currentTrackKey)">← Exit simulator</button>
+    </div>
+  </section>
+
+  <!-- ============ PREP ============ -->
+  <section id="scr-prep" class="screen roundWrap">
+    <div class="modeTag" id="prepMode"></div>
+    <div id="promptBox"></div>
+    <div id="promptSub"></div>
+    <div id="prepCount">5</div>
+    <p style="color:var(--muted); font-size:14px;" id="prepHint">Get ready to speak…</p>
+    <button class="btn" id="prepReadyBtn" style="display:none;margin-top:14px;" onclick="skipPrep()">I'm ready — start now ▶</button>
+  </section>
+
+  <!-- ============ SPEAK ============ -->
+  <section id="scr-speak" class="screen roundWrap">
+    <div class="modeTag" id="speakMode"></div>
+    <div id="promptBox2" style="font-size:20px;font-weight:800;line-height:1.35;margin:10px auto 4px;max-width:640px;"></div>
+    <div id="speakSub" style="color:var(--muted);font-size:14px;min-height:20px;"></div>
+    <div id="timerWrap">
+      <svg width="190" height="190">
+        <circle cx="95" cy="95" r="84" fill="none" stroke="#262f4a" stroke-width="10"/>
+        <circle id="ring" cx="95" cy="95" r="84" fill="none" stroke="url(#g1)" stroke-width="10"
+                stroke-linecap="round" stroke-dasharray="527.8" stroke-dashoffset="0"/>
+        <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#00d4ff"/>
+        </linearGradient></defs>
+      </svg>
+      <div id="timerNum">60</div>
+    </div>
+    <div id="micState" class="mic-live"><span class="dot"></span> Listening…</div>
+    <div id="liveTranscript"><span style="opacity:.5">Your words appear here as you speak…</span></div>
+    <div id="roundControls">
+      <button class="btn danger" onclick="endSpeaking(true)">✅ Done early <span class="kbd" style="color:#fff;border-color:rgba(255,255,255,.4)">Space</span></button>
+    </div>
+  </section>
+
+  <!-- ============ FLIP (debate) ============ -->
+  <section id="scr-flip" class="screen roundWrap">
+    <div id="flipBanner">🔄 SWITCH SIDES!<small id="flipSub"></small></div>
+  </section>
+
+  <!-- ============ FEEDBACK ============ -->
+  <section id="scr-feedback" class="screen roundWrap">
+    <div class="modeTag" id="fbMode"></div>
+    <div id="gradeBig">A</div>
+    <div id="scoreLine"></div>
+    <div id="scoreDelta" style="margin-top:6px;font-size:14px;font-weight:700;"></div>
+    <div id="coachSay"></div>
+    <div class="card" style="margin-top:22px; text-align:left;">
+      <div class="bars" id="fbBars"></div>
+      <div id="tipBox"></div>
+      <div id="fbTranscript"></div>
+    </div>
+    <div id="xpGain"></div>
+    <div id="newBadges"></div>
+
+    <div class="card" id="playbackWrap" style="display:none;margin-top:14px;text-align:left;">
+      <h3 style="font-size:16px;margin-bottom:4px;">🔊 Hear yourself back</h3>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:10px;">Cringing at your own voice is normal — and it's the fastest delivery upgrade there is. Listen for the fillers and the rushed bits.</p>
+      <div id="playbackBody" style="display:grid;gap:10px;"></div>
+    </div>
+
+    <div id="aiCoachPanel" class="card" style="display:none;">
+      <div class="ai-coach-head">
+        <h3>🧠 AI Coach</h3>
+        <div class="spinner" id="aiCoachSpin" style="display:none;"></div>
+      </div>
+      <div id="aiCoachBody" class="md"></div>
+      <div id="aiCoachErr" style="display:none;"></div>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+        <button class="btn ghost" id="aiCoachRetry" style="display:none;padding:9px 16px;font-size:13px;" onclick="fetchAiCoaching()">🔄 Retry</button>
+        <button class="btn ghost" style="padding:9px 16px;font-size:13px;" onclick="copyCoachPrompt()">📋 Copy prompt instead</button>
+      </div>
+    </div>
+
+    <div id="coachWrap" style="margin-top:22px;">
+      <button class="btn ghost" id="coachBtn" onclick="copyCoachPrompt()">🤖 Get free AI coaching</button>
+      <div id="coachPanel" class="card" style="display:none; margin-top:14px; text-align:left;">
+        <div id="coachStatus" style="font-weight:700; margin-bottom:6px;"></div>
+        <div style="color:var(--muted); font-size:14px; line-height:1.5;">
+          Paste it into any free AI chat — it has everything the coach needs (no login required for some, and no cost on any of them).
+        </div>
+        <div class="coach-links">
+          <a class="btn" href="https://claude.ai/new" target="_blank" rel="noopener">Claude</a>
+          <a class="btn ghost" href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT</a>
+          <a class="btn ghost" href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini</a>
+        </div>
+        <button class="btn ghost" id="coachToggle" style="margin-top:12px; padding:9px 16px; font-size:13px;" onclick="toggleCoachPrompt()">Show prompt</button>
+        <textarea id="coachText" readonly spellcheck="false"></textarea>
+      </div>
+    </div>
+
+    <div id="fbButtons">
+      <button class="btn" onclick="playAgain()">🔁 Same mode <span class="kbd" style="color:#fff;border-color:rgba(255,255,255,.4)">Enter</span></button>
+      <button class="btn ghost" onclick="goHome()">🎮 Change mode</button>
+      <button class="btn ghost" onclick="showStats()">📈 Progress</button>
+    </div>
+  </section>
+
+  <!-- ============ SELF-RATE (no-mic fallback) ============ -->
+  <section id="scr-selfrate" class="screen roundWrap">
+    <h2 style="margin-top:30px;">Time! How did that feel?</h2>
+    <p style="color:var(--muted);margin-top:8px;">No mic feedback this round — rate yourself honestly.</p>
+    <div id="stars">
+      <button data-v="1">⭐</button><button data-v="2">⭐</button><button data-v="3">⭐</button><button data-v="4">⭐</button><button data-v="5">⭐</button>
+    </div>
+    <button class="btn" id="selfrateGo" disabled onclick="finishSelfRate()">See results</button>
+  </section>
+
+  <!-- ============ STATS ============ -->
+  <section id="scr-stats" class="screen">
+    <h2 style="margin-bottom:4px;">📈 Your Progress</h2>
+    <p style="color:var(--muted);font-size:14px;">Come back daily — the streak keeps you sharp.</p>
+    <div class="statgrid">
+      <div class="stat-tile"><div class="num" id="stRounds">0</div><div class="cap">Rounds</div></div>
+      <div class="stat-tile"><div class="num" id="stAvg">–</div><div class="cap">Avg score</div></div>
+      <div class="stat-tile"><div class="num" id="stWpm">–</div><div class="cap">Avg WPM</div></div>
+      <div class="stat-tile"><div class="num" id="stFill">–</div><div class="cap">Stumbles / min</div></div>
+    </div>
+    <div class="card" id="improveCard" style="margin-top:14px;">
+      <h3>📈 Then vs now</h3>
+      <div id="improveBody"></div>
+    </div>
+    <div class="card" id="sparkCard" style="margin-top:14px;">
+      <h3>Score trend (last 50 rounds)</h3>
+      <div id="sparkline" style="min-height:70px;"></div>
+    </div>
+    <div class="card" id="bestCard" style="margin-top:14px;">
+      <h3>Best per mode</h3>
+      <div id="bestGrid"></div>
+    </div>
+    <div class="card" id="badgesCard" style="margin-top:14px;">
+      <h3>Badges</h3>
+      <div id="badgeGrid"></div>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:20px;">
+      <button class="btn" onclick="goHome()">🎙️ Back to the mic</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   QUICK WIT — impromptu speaking trainer
+   ===================================================================== */
+
+/* ------------------------- content pools ------------------------- */
+// tier: 1 = always, 2 = unlocks at level 5 (Hard), 3 = level 10 (Expert)
+const OBJECTS = [
+  ...["a pen","a brick","a half-used candle","a stapler","an umbrella","a rubber duck","a paperclip","a coffee mug",
+  "yesterday's newspaper","a ladder","a garden gnome","a bicycle bell","an empty jar","a snow globe","a calculator",
+  "a doormat","a flashlight","an alarm clock","a watering can","an extension cord","a deck of cards","a whistle",
+  "a kitchen sponge","a wooden ruler","an ice cube tray","a plant pot","a key ring","a mousepad"].map(t=>({t,tier:1})),
+  ...["a broken umbrella","a single left sock","an expired coupon","a deflated balloon","a chipped teacup",
+  "a dead houseplant","a jar of expired mayonnaise","one chopstick"].map(t=>({t,tier:2})),
+  ...["an invisible hat","a bottle of premium air","a map of a city that doesn't exist","a subscription to silence",
+  "a ticket to yesterday","a pet rock with anxiety"].map(t=>({t,tier:3})),
+];
+const PERSONAS = [
+  ...["a busy CEO who hates small talk","a skeptical grandmother","a broke college student","a pirate captain",
+  "a robot learning human customs","a kindergarten teacher","an astronaut leaving Earth tomorrow","a medieval knight",
+  "a sleep-deprived new parent","a survivalist prepping for doomsday","a tourist who speaks little English",
+  "a magician looking for new props"].map(t=>({t,tier:1})),
+  ...["a billionaire who already has everything","a minimalist who owns exactly ten things","a germophobe",
+  "someone who just returned this exact item","your biggest competitor's CEO"].map(t=>({t,tier:2})),
+];
+const RAPIDFIRE = [
+  ...["Why should we hire you?","Convince me to wake up at 5 AM.","Explain the internet to a grandma from 1950.",
+  "Defend pineapple on pizza.","You have 30 seconds to talk your way out of a parking ticket.",
+  "Convince me cats are better than dogs.","Why do Mondays deserve more love?","Pitch a movie about a heroic accountant.",
+  "Why should schools teach cooking?","Convince an alien that Earth is worth visiting.","Sell me on taking the stairs forever.",
+  "Explain why the sky is blue — confidently, even if you're wrong.","Convince your boss you deserve a raise.",
+  "What's the best invention ever, and why?","Persuade me to give up my phone for a week.","Why should everyone keep a journal?",
+  "Convince a kid that vegetables are cooler than candy.","Explain what money is to a five-year-old.",
+  "Why is your hometown the best place on Earth?","Talk me out of quitting my job to become a juggler.",
+  "Pitch a restaurant that only serves breakfast.","Why should people plant trees?","Convince me to adopt an older dog.",
+  "Explain gravity like I'm in kindergarten.","Why is failure a good teacher?","Persuade me to learn a musical instrument.",
+  "What superpower would ruin your life, and why?","Convince me board games beat movie nights.",
+  "Why should everyone learn to swim?","Pitch an app that solves a problem nobody knew they had.",
+  "Convince me to try your favorite food.","Why are libraries still important?","Talk me into running a 5K with you.",
+  "Explain why we dream — make it up if you must.","Persuade me that mornings are magical.",
+  "Why should tourists visit a tiny village instead of a capital city?","Convince me to write a book.",
+  "What would you tell your 10-year-old self?","Why is laughing good for you?","Pitch a holiday that doesn't exist yet."].map(t=>({t,tier:1})),
+  ...["Defend the last mistake you made — like a lawyer.","Convince a room of chefs that cereal counts as cooking.",
+  "You broke a world record by accident. Explain how.","Justify why you should be the first mayor of Mars.",
+  "Explain to angry villagers why you accidentally woke the dragon.","Convince time travelers that this year is worth visiting.",
+  "You're a toaster with feelings. Ask for a promotion.","Defend socks with sandals at a fashion show.",
+  "Explain to your Wi-Fi router why you deserve faster internet.","Convince a ghost to stop haunting your house — politely."].map(t=>({t,tier:2})),
+  ...["Give the acceptance speech for an award you did NOT earn.","Explain the color blue to someone who has never seen.",
+  "You have 30 seconds to prevent an alien invasion — with words only.","Convince the sun to rise an hour later.",
+  "Deliver breaking news about an event that makes no sense.","Argue that silence is the loudest sound."].map(t=>({t,tier:3})),
+];
+const SPINNER_WORDS = ["pirate","toaster","Monday","volcano","umbrella","dentist","spaceship","banana","wizard","karaoke",
+  "penguin","treasure","homework","thunderstorm","espresso","ninja","elevator","submarine","campfire","magnet",
+  "jellyfish","marathon","snowman","library","tornado","saxophone","cactus","moonlight","detective","waffle",
+  "parachute","robot","jungle","ticket","mirror","avalanche","circus","whisper","skateboard","lighthouse",
+  "pancake","ghost","garden","backpack","telescope","mermaid","chocolate","blizzard","castle","laundry",
+  "comet","hammock","riddle","tunnel","popcorn","glacier","festival","compass","dragon","subway",
+  "honey","statue","rooftop","canoe","lantern","puzzle","orchard","fireworks","meteor","bakery",
+  "harbor","violin","desert","fountain","scooter","midnight","trampoline","suitcase","earthquake","trophy"];
+const STANCES = [
+  ...["Breakfast is the most important meal of the day","Remote work beats office work","Cats are better pets than dogs",
+  "Everyone should learn to code","Books are better than movies","School uniforms should be mandatory",
+  "Winter is the best season","Video games are a real sport","A hot dog is a sandwich","Homework should be banned",
+  "Pets should be allowed in every office","Naps at work should be mandatory","The five-second rule is valid",
+  "Pizza is better cold","Zoos do more good than harm","Everyone should travel alone at least once",
+  "Mornings are better than nights","Board games beat video games","Emoji make communication better",
+  "Cooking at home always beats eating out"].map(t=>({t,tier:1})),
+  ...["Money can buy happiness","Social media does more good than harm","Cereal is a soup",
+  "Fame is more of a curse than a gift","Time travel to the past would be a mistake","Aliens definitely exist",
+  "Texting is ruining language","It's better to be overdressed than underdressed",
+  "Superheroes should be regulated by the government","AI will make everyday life better"].map(t=>({t,tier:2})),
+];
+
+const FILLER_RE = /\b(um+|uh+|erm+|er|ah+|hmm+|mm+|like|you know|i mean|i guess|you see|basically|literally|actually|honestly|obviously|kind of|kinda|sort of|sorta|well|whatever|to be honest|at the end of the day|stuff like that|or something|if that makes sense)\b/gi;
+
+/* ------------------------- modes ------------------------- */
+const MODES = {
+  sell: {
+    emoji: "🖊️", name: "Sell Me This", tag: "SELL ME THIS",
+    desc: "A random object, a random buyer. You have 60 seconds to close the deal.",
+    meta: "60s pitch",
+  },
+  rapid: {
+    emoji: "⚡", name: "Rapid-Fire", tag: "RAPID-FIRE",
+    desc: "Three curveball questions, back to back, 30 seconds each. No time to overthink.",
+    meta: "3 × 30s answers",
+  },
+  story: {
+    emoji: "📖", name: "Story Spinner", tag: "STORY SPINNER",
+    desc: "Three random words. One coherent 60-second story that uses them all.",
+    meta: "60s story",
+  },
+  debate: {
+    emoji: "⚖️", name: "Debate Roulette", tag: "DEBATE ROULETTE",
+    desc: "Argue FOR a random stance… then the game flips it and you argue AGAINST.",
+    meta: "45s + 45s",
+  },
+  drill: {
+    emoji: "🗣️", name: "Small Talk Drill", tag: "SMALL TALK DRILL",
+    desc: "", meta: "", hidden: true,   // reached via the Small Talk Trainer, not the home grid
+  },
+  real: {
+    emoji: "🎯", name: "Real-Life Prep", tag: "REAL-LIFE PREP",
+    desc: "", meta: "", hidden: true,   // reached via Prep for Real Life, not the home grid
+  },
+  weak: {
+    emoji: "🔧", name: "Weakness Drill", tag: "WEAKNESS DRILL",
+    desc: "", meta: "", hidden: true,   // generated from the coach's latest FIX
+  },
+  daily: {
+    emoji: "📅", name: "Daily Challenge", tag: "DAILY CHALLENGE",
+    desc: "", meta: "", hidden: true,   // one rotating scenario per day
+  },
+};
+
+/* ------------------------- AI coaching prompt -------------------------
+   The game measures delivery (pace, fillers, pitch) but can't judge whether an
+   argument is any good. This builds a self-contained prompt the player pastes
+   into a free AI chat to get that judgement. Nothing is sent from here. */
+
+const COACH_EXPERTISE = `You are an elite speaking coach — part debate champion, part sales trainer, part improv teacher. You are coaching someone practising impromptu speaking. Judge them against what actually makes speech persuasive:
+
+PERSUASION
+- Ethos, pathos, logos: a convincing case needs credibility, feeling AND logic. Most weak answers have only one.
+- Structure beats fluency. Strong impromptu speech follows a spine: PREP (Point → Reason → Example → Point), or Problem → Solution → Benefit, or What → So What → Now What. A smooth ramble still loses to a rough answer with a spine.
+- Lead with the claim. Burying the point until the end wastes the listener's attention.
+- Concrete beats abstract, always. One specific example, number, name or image outperforms three adjectives. "Saves you time" is nothing; "gets you out the door eight minutes earlier" is something.
+- Signpost: "three reasons — first… second… and the one that actually matters…" gives the listener a map.
+- Close. End with an explicit ask or a landed point. Trailing off wastes everything that came before.
+
+DELIVERY
+- 110–160 words/min is the sweet spot. Faster reads as nerves; slower reads as uncertainty.
+- Silent pauses read as confidence. Fillers ("um", "like", "basically") read as uncertainty. The pause is always the better trade.
+- Pitch variation signals conviction. Monotone signals disengagement, however good the words are.
+- Hedging ("kind of", "I think maybe", "sort of") undercuts authority. Say the thing.
+
+FAILURE MODES — check for these explicitly
+- Rambling with no structure.
+- Burying the lede.
+- Abstraction with no example.
+- No close.
+- Answering the question they wish they'd been asked instead of the one asked.
+- Repeating a claim louder instead of supporting it.`;
+
+const MODE_RUBRIC = {
+  sell: `MODE: "Sell Me This" — an improvised sales pitch for a random object to a specific buyer.
+What good looks like:
+- Diagnose before you pitch. Great sellers establish the buyer's need first, then aim the product at it.
+- Sell the BENEFIT, not the feature. Not what it has — what changes in their life.
+- Tailor to THIS buyer. The same pen sells completely differently to a CEO than to a pirate. Ignoring who they are is the most common failure.
+- Pre-empt the obvious objection before they raise it.
+- Close with an explicit ask. "So — do you want it?"
+Classic failure: reciting features, never mentioning the buyer, never asking for the sale.`,
+
+  rapid: `MODE: "Rapid-Fire" — three unrelated curveball questions, 30 seconds each.
+What good looks like:
+- Answer the ACTUAL question in the first sentence, then justify it. No preamble.
+- Take a position. Hedging reads as weakness; commit to an answer even on an absurd question.
+- One concrete example beats three abstract claims.
+- Land a close in the time available rather than being cut off mid-thought.
+Judge each answer separately — they are independent questions.`,
+
+  story: `MODE: "Story Spinner" — improvise one coherent story that uses three random words.
+What good looks like:
+- A story needs: a character, something they WANT, an obstacle, a turn, a resolution. Events without conflict are a list, not a story.
+- Stakes. Why does this matter to the character?
+- Sensory, specific detail creates vividness — not "it was scary" but what was actually seen or heard.
+- A payoff or callback that ties the ending to the opening.
+- The three words must be woven in naturally as part of the plot, not name-dropped to tick a box.
+Classic failure: "and then, and then, and then" — a sequence of events with no conflict and no ending.`,
+
+  debate: `MODE: "Debate Roulette" — argue FOR a stance, then AGAINST the same stance.
+What good looks like:
+- Steelman. Argue the strongest version of each side, not a convenient weak one.
+- Evidence hierarchy: data > expert consensus > anecdote > bare assertion. Notice which one they actually used.
+- Concede and pivot: "that's true — and it's exactly why…" is stronger than denying an obvious point.
+- Avoid fallacies: strawman, ad hominem, slippery slope, false dilemma.
+- The real test is the side they disagree with. Genuine mental flexibility means both sides sound equally committed.
+Compare the two sides directly — was one noticeably weaker, and was it the one they personally disagree with?`,
+};
+
+let lastCoachPrompt = null;   // stashed at feedback time; survives round being cleared
+let lastCoachMeta = null;     // { m: modeKey } for the round the prompt belongs to
+
+function buildCoachPrompt(a) {
+  const mode = MODES[round.modeKey];
+  const ch = round.challenge;
+
+  let challengeText = "";
+  if (round.modeKey === "sell") challengeText = `Sell ${ch.obj} to ${ch.who}.`;
+  else if (round.modeKey === "story") challengeText = `Tell a story using the words: ${ch.words.join(", ")}.`;
+  else if (round.modeKey === "debate") challengeText = `Stance: "${ch.stance}" — argue FOR, then AGAINST.`;
+  else if (round.modeKey === "rapid") challengeText = `Three questions, 30 seconds each.`;
+  else if (round.modeKey === "drill") challengeText = round.drill.lesson.drill.prompt;
+  else if (round.modeKey === "real") challengeText = `${round.real.ch.scene || ""} ${round.real.ch.task}`.trim();
+  else if (round.modeKey === "weak") challengeText = round.weak.ch.task;
+  else if (round.modeKey === "daily") challengeText = round.daily.task;
+
+  const rubric = round.modeKey === "drill"
+    ? `MODE: Small talk drill — the player just studied the lesson "${round.drill.lesson.title}" (${SMALLTALK[round.drill.trackKey].name} track) and is practicing that ONE technique.
+${round.drill.lesson.drill.rubric}
+Grade primarily on whether they APPLIED the technique — delivery is secondary here.`
+    : round.modeKey === "real"
+    ? `MODE: REAL-LIFE PREP — this is a REHEARSAL for something that is actually about to happen in the player's life, not a game round.
+Their real situation, in their own words: "${round.real.desc}" (type: ${round.real.type}).
+Judge exactly one question: would this answer WORK on the real audience? Think like the real interviewer / audience / investor / person across the table — what would they think, where would they push back, what would land?
+Your advice must be usable in the real moment: tell them which of their exact phrasings to KEEP and reuse, what to prepare or memorize before the day, and what to never say again. Coach the person for the event, not the transcript for the game.`
+    : round.modeKey === "weak"
+    ? `MODE: WEAKNESS DRILL — this drill exists for exactly ONE reason. After a previous ${round.weak.srcName} round, you (the coach) told the player the #1 thing to fix:
+"${round.weak.fix}"
+The drill you set them: ${round.weak.ch.task}
+Judge ONLY whether they executed that fix. Everything else is secondary — even a rough performance scores well if the fix was nailed, and a polished one scores badly if the fix was ignored. Open your verdict with a clear "You did it" or "You didn't do it", and point to the exact moment in their words that proves it.`
+    : round.modeKey === "daily"
+    ? `MODE: DAILY CHALLENGE — "${round.daily.name}". The scenario: ${round.daily.task}
+${round.daily.r}`
+    : MODE_RUBRIC[round.modeKey];
+
+  // per-segment so rapid-fire's 3 answers and debate's 2 sides stay separated
+  const segs = round.segments.map((s, i) => {
+    const said = (s.transcript || "").trim();
+    return `--- ${s.label}\n${said || "(nothing said)"}`;
+  }).join("\n\n");
+
+  const fillerList = a.fillers.length
+    ? [...new Set(a.fillers.map(f => f.toLowerCase()))].join(", ")
+    : "none";
+  const toneLine = a.tone.score === null
+    ? "not measured"
+    : a.tone.monotone
+      ? `monotone (very little pitch variation)`
+      : `pitch variation ${(a.tone.pitchCV * 100).toFixed(0)}% — ${a.tone.note.toLowerCase()}`;
+
+  // the coach remembers: feed back its own previous verdicts so it can track improvement
+  lastCoachMeta = { m: round.modeKey };
+  const prevCoach = (save.coachLog || []).slice(-6);
+  const historyBlock = prevCoach.length ? `
+
+=== THEIR COACHING HISTORY (oldest → newest — you wrote these after their previous rounds) ===
+${prevCoach.map(e => `${e.d} · ${e.m} · you scored them ${e.score}/10 · you told them to fix: ${e.fix || "(n/a)"}`).join("\n")}` : "";
+  const progressSection = prevCoach.length ? `
+**Progress check:** compare THIS round against the coaching history above. Name one concrete thing that got better and one problem that keeps recurring. If they acted on the most recent FIX you gave them, credit it explicitly; if they ignored it, call that out.
+` : "";
+
+  return `${COACH_EXPERTISE}
+
+${rubric}
+
+=== THE CHALLENGE THEY WERE GIVEN ===
+${challengeText}
+
+=== WHAT THEY ACTUALLY SAID (live speech-to-text transcript, so expect some errors) ===
+${segs}
+
+=== MEASURED DELIVERY (from their microphone — you cannot hear the audio, so trust these numbers) ===
+- Pace: ${a.wpm} words/min (target 110–160)
+- Filler words: ${a.fillers.length} total${a.fillers.length ? ` (${fillerList})` : ""}
+- Stumbles/repeated words: ${a.rep.reps}
+- Tone: ${toneLine}
+- Spoke for ${a.spokenSec}s of the ${a.totalSec}s available
+- The game's own automated score: ${a.score}/100${historyBlock}
+
+=== COACH ME ===
+Reply in exactly this shape, and keep the whole thing under 350 words:
+
+**Verdict:** one blunt sentence.
+
+**What worked:** 2–3 bullets. Quote my actual words back to me.
+
+**What didn't:** 2–3 bullets. Quote my actual words back to me.
+${progressSection}
+**Fix this first:** the single highest-leverage change for my next round.
+
+**How a strong answer opens:** rewrite my first two sentences the way a great speaker would have said them, for this exact challenge.
+
+Then end with exactly these two lines — they are machine-read, keep the format exact:
+SCORE: X/10
+FIX: one short imperative sentence — the single thing to do differently next round.
+
+CALIBRATION for SCORE — hold this line, never inflate:
+1–2 barely coherent · 3–4 spoke fluently but rambled, no structure or evidence · 5 decent but generic (the default for most attempts) · 6 clear structure OR real persuasion, not both · 7 would genuinely work on a real stranger · 8 would stand out in a room of good speakers · 9–10 near-professional. Most rounds land 3–6; a 7+ should feel rare and earned. Judge SUBSTANCE (logic, evidence, persuasion, addressing the real challenge) — delivery is already measured above.
+
+Be specific, not generic — everything you say should be impossible to copy-paste into a review of someone else's answer. Be honest rather than kind. If it was weak, say so and say why.`;
+}
+
+/* ------------------------- Claude API (live AI coach) -------------------------
+   The user pastes their own API key in Settings; it lives in localStorage and
+   requests go straight from this browser to api.anthropic.com. Nothing else. */
+const API_KEY_STORE = "quickwit-api-key";
+function getApiKey() { return localStorage.getItem(API_KEY_STORE) || ""; }
+
+/* When the game is deployed publicly (e.g. Vercel), a serverless proxy at
+   /api/claude holds the owner's key server-side so visitors never need one.
+   Locally / on plain static hosting that endpoint 404s and we fall back to
+   the user's own pasted key. */
+let proxyAvailable = false;
+async function detectProxy() {
+  try {
+    const r = await fetch("/api/claude", { method: "GET" });
+    proxyAvailable = r.ok;
+  } catch (e) { proxyAvailable = false; }
+}
+function aiAvailable() { return !!getApiKey() || proxyAvailable || MOCK; }
+
+async function callClaude({ system, messages, maxTokens = 1024, thinking = false, mockKind = "coach" }) {
+  const key = getApiKey();
+  if (MOCK && !key) return mockClaude(mockKind);
+  if (!key && !proxyAvailable) throw new Error("No API key — add one in Settings (⚙️).");
+
+  let res;
+  if (key) {
+    // direct: the player's own key, straight to Anthropic
+    const body = { model: "claude-opus-4-8", max_tokens: maxTokens, messages };
+    if (system) body.system = system;
+    if (thinking) body.thinking = { type: "adaptive" };
+    res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      const msg = data && data.error && data.error.message ? data.error.message : `HTTP ${res.status}`;
+      if (res.status === 401) throw new Error("API key rejected — check it in Settings (⚙️).");
+      if (res.status === 429) throw new Error("Rate limited — wait a moment and retry.");
+      throw new Error(msg);
+    }
+    return (data.content || []).filter(b => b.type === "text").map(b => b.text).join("").trim();
+  }
+
+  // proxy: the site owner's key stays on the server
+  res = await fetch("/api/claude", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ system, messages, maxTokens, thinking }),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    if (res.status === 429) throw new Error(data && data.error ? data.error : "You've used today's free coaching — come back tomorrow, or add your own key in Settings (⚙️).");
+    throw new Error(data && data.error ? data.error : `Coach unavailable (HTTP ${res.status})`);
+  }
+  return (data.text || "").trim();
+}
+
+// Canned responses so the whole flow is testable offline with ?mock=1
+function mockClaude(kind) {
+  const canned = {
+    coach: "**Verdict:** Solid energy, but you sold the object instead of the buyer.\n\n**What worked:**\n- You opened with a hook (\"imagine a pirate holding a toaster\") that grabbed attention.\n- You kept momentum and never stalled.\n\n**What didn't:**\n- \"it saves you time every single day\" — vague benefit, no concrete picture.\n- You never asked for the sale.\n\n**Progress check:** Better pacing than your last round, but the missing close is now a recurring problem — that's twice.\n\n**Fix this first:** End every pitch with an explicit ask.\n\n**How a strong answer opens:** \"You're a busy CEO — mornings are war. This gets you out the door eight minutes earlier, every day.\"\n\nSCORE: 4/10\nFIX: End your pitch with a direct ask for the sale.",
+    reply: "Oh nice, I was wondering if the line was always this long — do you come here a lot?",
+    challenge: '{"scene":"Final-round interview. The CTO closes your CV and leans back.","task":"\\"Honestly? We\'ve interviewed candidates with twice your experience. Why should we take the risk on you?\\"","sub":"Don\'t apologize for the gap — reframe it as hunger, then land ONE concrete proof.","seconds":60}',
+    fixdrill: '{"task":"Pitch your own phone to an imaginary stranger for 35 seconds — and you MUST finish with one direct, unmissable ask for the sale.","sub":"Success = the last sentence is a confident ask, nothing after it.","seconds":35}',
+    simcoach: "**Verdict:** Friendly but you interviewed instead of conversing.\n\n**What worked:**\n- Good open questions early.\n\n**What didn't:**\n- You fired questions without sharing anything back.\n\n**Fix this first:** Use answer-plus — answer, add a detail of your own, hand it back.\n\n**Rewrite:** Instead of \"What's his name?\", try \"He's gorgeous — my sister has a retriever who eats her furniture. What's this one's name?\"\n\nSCORE: 5/10\nFIX: Share one detail about yourself before asking your next question.",
+  };
+  let out = canned[kind] || canned.coach;
+  if (kind === "reply") {
+    const turn = sim ? sim.turns : 0;               // player turns taken so far
+    const lines = [
+      "Oh nice — I was wondering if the line was always this long. You a regular here?",
+      "Ha, fair. Honestly I'm just killing time before a thing later.",
+      "Okay that actually made me laugh. Where'd that come from?",
+      "See, now you've got my attention. Keep going.",
+      "You're trouble, aren't you. I like it.",
+    ];
+    const deltas = [8, -6, 12, 14, 14];             // deterministic arc: up, dip, up, up, up
+    const spoken = lines[Math.min(turn, lines.length - 1)];
+    let delta = turn === 0 ? 0 : (deltas[Math.min(turn - 1, deltas.length - 1)]);
+    let event = "none";
+    if (sim && sim.turns >= 4 && sim.interest >= 75) { event = "give"; }
+    const deltaStr = delta > 0 ? "+" + delta : "" + delta;   // emulate the real model writing "+5"
+    out = `${spoken}\n###META###\nDELTA: ${deltaStr}\nMOOD: ${delta > 0 ? "warming" : delta < 0 ? "cooling" : "holding"}\nEVENT: ${event}`;
+  }
+  return new Promise(r => setTimeout(() => r(out), 500));
+}
+
+// Minimal markdown → HTML for coach output (bold, bullets, headings)
+function renderMd(text) {
+  const esc = escapeHtml(text);
+  const lines = esc.split("\n");
+  let html = "", inList = false;
+  for (const line of lines) {
+    const t = line.trim();
+    if (/^[-*] /.test(t)) {
+      if (!inList) { html += "<ul>"; inList = true; }
+      html += "<li>" + inlineMd(t.slice(2)) + "</li>";
+      continue;
+    }
+    if (inList) { html += "</ul>"; inList = false; }
+    if (!t) continue;
+    if (/^\*\*[^*]+:?\*\*:?\s*/.test(t) && t.indexOf("**", 2) === t.length - 2 - (t.endsWith(":") ? 1 : 0) || /^#{1,4} /.test(t)) {
+      html += '<span class="md-h">' + inlineMd(t.replace(/^#{1,4} /, "")) + "</span>";
+    } else {
+      html += "<p style='margin:4px 0;'>" + inlineMd(t) + "</p>";
+    }
+  }
+  if (inList) html += "</ul>";
+  return html;
+}
+function inlineMd(s) { return s.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/\*([^*]+)\*/g, "<i>$1</i>"); }
+
+/* ---- settings screen ---- */
+function showSettings() {
+  stopEverything();
+  document.getElementById("keyInput").value = getApiKey();
+  document.getElementById("keyStatus").textContent = getApiKey() ? "✅ A key is saved in this browser." : "";
+  document.getElementById("keyStatus").style.color = "var(--good)";
+  show("scr-settings");
+}
+function saveKey() {
+  const v = document.getElementById("keyInput").value.trim();
+  const st = document.getElementById("keyStatus");
+  if (!v) { st.textContent = "Paste a key first."; st.style.color = "var(--warn)"; return; }
+  localStorage.setItem(API_KEY_STORE, v);
+  st.textContent = "✅ Saved. AI coach and simulator are now live.";
+  st.style.color = "var(--good)";
+}
+async function testKey() {
+  const st = document.getElementById("keyStatus");
+  const v = document.getElementById("keyInput").value.trim();
+  if (v) localStorage.setItem(API_KEY_STORE, v);
+  st.textContent = "⏳ Testing…"; st.style.color = "var(--muted)";
+  try {
+    await callClaude({ messages: [{ role: "user", content: "hi" }], maxTokens: 8, mockKind: "reply" });
+    st.textContent = "✅ Key works!"; st.style.color = "var(--good)";
+  } catch (e) {
+    st.textContent = "❌ " + e.message; st.style.color = "var(--bad)";
+  }
+}
+function clearKey() {
+  localStorage.removeItem(API_KEY_STORE);
+  document.getElementById("keyInput").value = "";
+  const st = document.getElementById("keyStatus");
+  st.textContent = "Key removed."; st.style.color = "var(--muted)";
+}
+
+/* ---- live AI coaching on the feedback screen ---- */
+let aiCoachSeq = 0;
+async function fetchAiCoaching() {
+  if (!lastCoachPrompt) return;
+  const seq = ++aiCoachSeq;
+  const panel = document.getElementById("aiCoachPanel");
+  const bodyEl = document.getElementById("aiCoachBody");
+  const errEl = document.getElementById("aiCoachErr");
+  const spin = document.getElementById("aiCoachSpin");
+  const retry = document.getElementById("aiCoachRetry");
+  panel.style.display = "";
+  errEl.style.display = "none"; retry.style.display = "none";
+  spin.style.display = "";
+  bodyEl.innerHTML = '<span style="color:var(--muted);">Your coach is reviewing the round…</span>';
+  try {
+    const text = await callClaude({ messages: [{ role: "user", content: lastCoachPrompt }], maxTokens: 2048, thinking: true, mockKind: "coach" });
+    if (seq !== aiCoachSeq) return;   // user moved on
+    const sm = text.match(/^SCORE:\s*(\d{1,2})\s*\/\s*10\s*$/im);
+    const fm = text.match(/^FIX:\s*(.+)$/im);
+    const score10 = sm ? Math.max(0, Math.min(10, +sm[1])) : null;
+    const fix = fm ? fm[1].trim() : null;
+    const clean = text.replace(/^SCORE:\s*\d{1,2}\s*\/\s*10\s*$/im, "").replace(/^FIX:\s*.+$/im, "").trim();
+    let scoreHtml = "";
+    if (score10 !== null) {
+      const mKind = lastCoachMeta ? lastCoachMeta.m : "?";
+      const mName = MODES[mKind] ? MODES[mKind].name : mKind;
+      const prev = (save.coachLog || []).filter(e => e.m === mKind).slice(-1)[0];
+      let deltaHtml = "";
+      if (prev && typeof prev.score === "number") {
+        const d = score10 - prev.score;
+        deltaHtml = d > 0 ? ` <span style="color:var(--good);font-size:14px;">▲ +${d} vs your last ${mName} round</span>`
+          : d < 0 ? ` <span style="color:var(--bad);font-size:14px;">▼ ${d} vs your last ${mName} round</span>`
+          : ` <span style="color:var(--muted);font-size:14px;">= same as your last ${mName} round</span>`;
+      } else {
+        deltaHtml = ` <span style="color:var(--muted);font-size:14px;">— your baseline, beat it next round</span>`;
+      }
+      scoreHtml = `<div style="margin-top:14px;font-weight:800;font-size:18px;">🎯 Coach's score: ${score10}/10${deltaHtml}</div>` +
+        (fix ? `<div style="margin-top:8px;padding:10px 14px;border-left:4px solid var(--accent-2);background:rgba(0,212,255,.07);border-radius:0 10px 10px 0;font-size:14px;"><b style="color:var(--accent-2)">Next round:</b> ${escapeHtml(fix)}</div>
+        <button class="btn" style="margin-top:10px;padding:11px 20px;font-size:14px;" onclick="startFixDrill(this)">🔧 Drill this weakness now</button>` : "");
+      save.coachLog = save.coachLog || [];
+      save.coachLog.push({ d: new Date().toISOString().slice(0, 10), m: mKind, score: score10, fix: fix || "" });
+      if (save.coachLog.length > 40) save.coachLog = save.coachLog.slice(-40);
+      if (!save.baselineCoach && save.coachLog.length >= 3) {
+        const f3 = save.coachLog.slice(0, 3);
+        save.baselineCoach = { score: +(f3.reduce((s, e) => s + e.score, 0) / 3).toFixed(1), d: f3[0].d };
+      }
+      const lastH = save.history[save.history.length - 1];
+      if (lastH && lastH.ai === undefined) lastH.ai = score10;
+      persist();
+    }
+    bodyEl.innerHTML = renderMd(clean) + scoreHtml;
+  } catch (e) {
+    if (seq !== aiCoachSeq) return;
+    bodyEl.innerHTML = "";
+    errEl.textContent = "⚠️ " + e.message;
+    errEl.style.display = ""; retry.style.display = "";
+  } finally {
+    if (seq === aiCoachSeq) spin.style.display = "none";
+  }
+}
+
+/* ------------------------- SMALL TALK TRAINER ------------------------- */
+const SMALLTALK = {
+  everyday: {
+    emoji: "☕", name: "Everyday", tag: "EVERYDAY SMALL TALK",
+    desc: "Strangers, coworkers, parties. Never run out of things to say.",
+    scenes: [
+      { scene: "In line at a coffee shop, Saturday morning", persona: "a relaxed local in their 30s with a golden retriever, friendly but won't carry the conversation for you" },
+      { scene: "Office kitchen, Monday morning", persona: "a coworker from another team you've only nodded at before, polite, a bit tired" },
+      { scene: "A friend's birthday BBQ", persona: "the host's cousin who knows nobody here either, open to chatting but shy at first" },
+    ],
+    simRubric: `Judge them as an everyday-conversation coach:
+- Threading: did they pull threads from what the other person said, or fire random new topics?
+- Open questions (what/how/why) vs dead-end yes/no questions.
+- Give-back: did they share things about themselves, or interrogate?
+- Balance: roughly equal talking and listening.
+- Warmth: did the other person plausibly ENJOY this?`,
+    lessons: [
+      {
+        id: "e1", emoji: "👋", title: "Openers & FORD",
+        summary: "Start from nothing without being weird.",
+        content: `**The situational opener**
+The best opener is never a script — it's a comment on the thing you both share right now: the line, the weather, the dog, the burnt smell from the office microwave. "Is this place always this packed?" beats any rehearsed line, because it's effortless to answer.
+
+**Then: FORD**
+When the opener lands, you need somewhere to go. FORD = **Family, Occupation, Recreation, Dreams** — the four topics almost anyone will talk about.
+
+**Open beats closed**
+- Closed: "Do you like it here?" → "yeah." Dead end.
+- Open: "How'd you end up in this neighborhood?" → a story.
+Start questions with *what*, *how*, or *"tell me about"* and people hand you material.`,
+        drill: {
+          prompt: "You're in line at a coffee shop next to a friendly stranger with a dog. Speak YOUR side of the conversation out loud: a situational opener, then keep it alive with open questions. Imagine their answers and react to them.",
+          sub: "Situational opener → open questions → react. 60 seconds.",
+          seconds: 60,
+          rubric: "They practiced OPENERS & FORD. Grade: (1) did they open with a natural situational comment, not a canned line; (2) were their questions open (what/how) rather than yes/no; (3) did they touch FORD topics naturally?",
+        },
+      },
+      {
+        id: "e2", emoji: "🧵", title: "Threading — never run dry",
+        summary: "Every sentence someone says contains 3 conversations.",
+        content: `**The skill that kills awkward silence**
+People hand you threads constantly. "Weekend was hectic — my sister was visiting and we hit that new night market downtown" contains at least three: *the sister*, *the night market*, *what "hectic" means in her life*.
+
+Running out of things to say almost never means there's nothing to say — it means you dropped every thread and are trying to invent a brand-new topic from nothing, which is much harder.
+
+**How to thread**
+- Pick the thread YOU are most curious about — genuine curiosity sounds different.
+- Pull it: "Wait, the night market — the one on 5th? What's it like?"
+- **Statement → question** rhythm: react first ("I've been meaning to go"), then ask. Pure questions feel like a quiz.`,
+        drill: {
+          prompt: "A coworker says: “Weekend was hectic — my sister was visiting and we ended up at that new night market downtown.” Respond out loud and keep the conversation going by pulling threads from what she said.",
+          sub: "React + pull threads. Don't change the subject. 45 seconds.",
+          seconds: 45,
+          rubric: "They practiced THREADING. Grade: (1) did they pick up specific threads from the given sentence (sister / night market / hectic) instead of switching topics; (2) statement-then-question rhythm, not quiz-mode; (3) did it sound like genuine curiosity?",
+        },
+      },
+      {
+        id: "e3", emoji: "🎁", title: "Give something back",
+        summary: "Questions alone feel like an interview. Share.",
+        content: `**Interrogation vs conversation**
+If every line from you is a question, the other person is being interviewed. Comfort comes from *trading* — small pieces of yourself that give them permission to share too.
+
+**The answer-plus rule**
+When asked a question, do three things:
+1. **Answer** it.
+2. **Plus** — add one detail that invites a follow-up ("...mostly because I moved here for a job that fell through, which is a story").
+3. **Hand it back** — a related question or an open pause.
+
+"What do you do?" → "I'm a nurse — night shifts, so my sleep schedule is a crime scene. What about you, normal-human hours?" That one answer gives them three doors to walk through.`,
+        drill: {
+          prompt: "Someone at a party asks you: “So, what do you do?” Answer out loud using answer-plus: the answer, one detail that invites questions, and a hand-back.",
+          sub: "Answer → interesting detail → hand it back. 45 seconds.",
+          seconds: 45,
+          rubric: "They practiced ANSWER-PLUS. Grade: (1) did they answer then ADD a hook detail that invites follow-up; (2) did they hand the conversation back; (3) did it sound like a person, not a resume?",
+        },
+      },
+      {
+        id: "e4", emoji: "🚪", title: "Callbacks & graceful exits",
+        summary: "End conversations so people want the next one.",
+        content: `**Exits are remembered**
+People forget the middle of conversations and remember how they ended. Trailing off or escaping ("well... anyway...") undoes good work.
+
+**The three-part exit**
+1. **Callback** — reference something from earlier: "Good luck with the marathon — hydrate!" Proves you listened; it's the cheapest, most powerful charm in conversation.
+2. **Warm close** — "This was genuinely fun."
+3. **Optional future hook** — "If you ever try that ramen place, tell me if it's worth it."
+
+That's it. Short, warm, specific. You leave on a peak instead of a fizzle.`,
+        drill: {
+          prompt: "You've chatted with someone at a party for 10 minutes — earlier they mentioned they're training for a marathon and that they just adopted a cat. End the conversation out loud: callback, warm close, future hook.",
+          sub: "Callback → warm close → future hook. 30 seconds.",
+          seconds: 30,
+          rubric: "They practiced EXITS. Grade: (1) a specific callback to the marathon or the cat; (2) a warm, confident close — no trailing off or apologizing; (3) an optional future hook. Short is GOOD here.",
+        },
+      },
+    ],
+  },
+
+  dating: {
+    emoji: "💘", name: "Social & Dating", tag: "SOCIAL & DATING",
+    desc: "Talking to someone you're into — natural, playful, confident.",
+    scenes: [
+      { scene: "A bookstore café, Sunday afternoon", persona: "someone attractive around your age reading at the next table, friendly if approached well but quickly bored by interview questions or try-hard lines" },
+      { scene: "A friend's house party", persona: "a friend-of-a-friend you've noticed across the room, witty, will test you with light teasing, warms up to people who can banter back without trying too hard" },
+      { scene: "A climbing gym, between routes", persona: "a regular at the gym you've seen a few times, easygoing, responds well to playfulness and genuine curiosity, shuts down at compliments about looks" },
+    ],
+    simRubric: `Judge them as a dating-conversation coach (keep it respectful — confidence, not pickup artistry):
+- Natural opener rooted in the situation, not a line.
+- Playfulness: light teasing about choices/opinions (never appearance or insecurities), self-amusement.
+- Genuine interest: did they go deeper on what the person said, or stay surface / interview-mode?
+- Give-back: sharing about themselves, not just questioning.
+- Confidence: comfortable statements and opinions, no permission-seeking or over-qualifying.
+- If the vibe was good, did they move things forward (suggesting something concrete) rather than letting it fizzle?`,
+    lessons: [
+      {
+        id: "d1", emoji: "📖", title: "The natural opener",
+        summary: "Situation beats any line ever written.",
+        content: `**Lines fail because they're portable**
+Anything you could say to anyone, anywhere, sounds like it. The opener that works is the one only possible *right here*: the book they're reading, the song that just played, the impossible route at the gym.
+
+**The formula (barely a formula)**
+Observation or honest reaction + optional question. "That's the third time you've laughed at that book — now I need to know what it is." It works because it's *true*, it's about *them-in-this-moment*, and it's easy to respond to.
+
+**Calibrate the stakes**
+Open like the outcome doesn't matter — because at this stage it doesn't. Low-pressure delivery ("I'm heading out in a minute, but I had to ask...") beats intensity every time. You're starting a conversation, not proposing.`,
+        drill: {
+          prompt: "Bookstore café. Someone you find attractive is laughing at a book at the next table. Open a conversation out loud — situational, honest, low pressure. Then keep it going a couple of beats.",
+          sub: "Observation → reaction → easy question. 45 seconds.",
+          seconds: 45,
+          rubric: "They practiced NATURAL OPENERS. Grade: (1) was the opener rooted in the actual situation (the book, the laugh) rather than generic; (2) low-pressure, unbothered delivery — no over-explaining; (3) did they follow up naturally instead of freezing after the opener?",
+        },
+      },
+      {
+        id: "d2", emoji: "😏", title: "Playful, not try-hard",
+        summary: "Banter calibration: tease choices, never the person.",
+        content: `**What flirty banter actually is**
+Light, warm disagreement. Having an opinion and playing with theirs. "You're a tea person? I'm not sure we can continue this conversation" — said with a grin — creates a tiny playful conflict that's fun to resolve.
+
+**The calibration rules**
+- Tease **choices and opinions** (tea vs coffee, their terrible movie takes) — never appearance, body, or anything they might be insecure about.
+- **Self-amusement first**: say it because it entertains *you*, not to get a reaction. Neediness is the tell.
+- **Balance**: one tease, then warmth. Non-stop teasing reads as negging; zero teasing reads as job interview.
+- If a tease lands flat — don't explain it. Smile, move on. Scrambling to fix it is the only real failure.`,
+        drill: {
+          prompt: "At a party, she says: “I'm a tea person, honestly coffee is disgusting.” Respond out loud — playful disagreement, keep it warm, keep it moving. Imagine her replies and keep the banter going.",
+          sub: "Tease the opinion, stay warm, don't over-explain. 45 seconds.",
+          seconds: 45,
+          rubric: "They practiced PLAYFUL BANTER. Grade: (1) did they playfully disagree/tease the OPINION with warmth; (2) self-amused tone vs approval-seeking or mean; (3) did they keep the conversation moving instead of beating the joke to death?",
+        },
+      },
+      {
+        id: "d3", emoji: "🔍", title: "Depth beats impressing",
+        summary: "Curiosity is more attractive than a resume.",
+        content: `**The instinct that backfires**
+When we like someone we start performing — listing accomplishments, being maximally agreeable. It reads as nervous. The counterintuitive move: put the spotlight on *them* and be genuinely curious.
+
+**Go deeper, not wider**
+Interview mode: "Where are you from? What do you do? Do you have siblings?" — three topics, zero connection.
+Depth mode: they mention training for a half marathon → "What got you into that?" → "What do you think about for two hours of running?" One topic, real connection. **The second and third question on the same topic is where the conversation becomes theirs and yours.**
+
+**React like a human**
+Between questions, give your actual reaction — surprise, disagreement, your own story. Depth without give-back is just a deeper interview.`,
+        drill: {
+          prompt: "She mentioned she's training for a half marathon. Go deeper on that out loud — follow-up questions, real reactions, a bit of you — without switching topics or interviewing.",
+          sub: "Second and third questions on the SAME topic. 60 seconds.",
+          seconds: 60,
+          rubric: "They practiced DEPTH. Grade: (1) did they ask deeper follow-ups on the marathon rather than switching topics; (2) real reactions and self-sharing between questions; (3) zero resume-talk / trying to impress?",
+        },
+      },
+      {
+        id: "d4", emoji: "🎯", title: "The confident ask",
+        summary: "Direct, specific, easy to say yes to — and easy to say no to.",
+        content: `**Vague asks get vague answers**
+"We should hang out sometime" is not an ask — it's an escape hatch. It puts all the work on them and signals you're afraid of the answer.
+
+**The anatomy of a good ask**
+1. **Direct**: "I'd like to see you again."
+2. **Specific**: "There's a taco place on 5th I've been meaning to try — Thursday?"
+3. **Low pressure**: an easy out is *confident*, not weak: "No stress if you're slammed this week."
+
+**Own the outcome**
+A "no" or "maybe" handled gracefully — "All good, this was fun anyway" — costs you nothing and is genuinely rare. The willingness to hear no *is* the confidence. Never negotiate, never sulk, never apologize for asking.`,
+        drill: {
+          prompt: "The conversation has been great — laughing, good energy, but she has to leave. Ask her out, out loud: direct, specific plan, low pressure. Then handle an imagined “um, maybe?” gracefully.",
+          sub: "Direct → specific → easy out → graceful. 30 seconds.",
+          seconds: 30,
+          rubric: "They practiced THE ASK. Grade: (1) direct and specific (concrete plan, day, place) vs vague 'sometime'; (2) low pressure with an easy out; (3) graceful, unbothered handling of the lukewarm response. Brevity is a virtue here.",
+        },
+      },
+    ],
+  },
+
+  business: {
+    emoji: "💼", name: "Business", tag: "BUSINESS & NETWORKING",
+    desc: "Networking, clients, senior people — warm and memorable, never sleazy.",
+    scenes: [
+      { scene: "A tech conference happy hour", persona: "a mid-level product manager at a company you'd like to work with, friendly but has met 30 people today and forgets the forgettable ones" },
+      { scene: "First 5 minutes of a video call with a new client", persona: "a slightly reserved potential client who hasn't decided if they trust you yet, warms up if the small talk is genuine and hates having their time wasted" },
+      { scene: "Sharing a table at a company offsite lunch", persona: "a senior director from another department, gracious but constantly pitched at, allergic to flattery, respects good questions" },
+    ],
+    simRubric: `Judge them as a professional-networking coach:
+- Warmth without sleaze: genuine interest vs transparent networking.
+- Intro quality: can they say who they are in one interesting sentence, without title-dumping?
+- Question quality: questions the person actually enjoys answering (challenges, changes, opinions) vs generic ones.
+- Listening: did they build on answers?
+- Memorability: will this person remember them tomorrow? Why?
+- Appropriate register: professional but human, not stiff, not overfamiliar.`,
+    lessons: [
+      {
+        id: "b1", emoji: "⚡", title: "The 20-second intro",
+        summary: "Who you are, minus the title-dump.",
+        content: `**Titles are forgettable; problems are not**
+"I'm a senior solutions architect at Meridian" evaporates on contact. "I help hospitals stop losing patient data when their systems crash" sticks — it's a problem, a stake, a picture.
+
+**Build yours**
+- **What you actually do**, framed as who you help + what changes for them.
+- **One human detail** as a hook: "...which mostly means I'm on planes — I've rated every airport coffee in Europe."
+- **Under 20 seconds**, then stop talking. The intro is bait for questions, not a speech.
+
+**Delivery**
+Say it like it's obvious, not rehearsed. And end with attention on them: "What brings you here?"`,
+        drill: {
+          prompt: "Conference happy hour. Someone asks: “So what do you do?” Give your 20-second intro out loud: problem-framed, one human hook, then hand the spotlight back. Use your real job or invent one.",
+          sub: "Problem → hook → hand-back. 30 seconds.",
+          seconds: 30,
+          rubric: "They practiced the 20-SECOND INTRO. Grade: (1) problem/impact framing instead of a title-dump; (2) one memorable human hook; (3) short, then handed back. Punish rambling hard.",
+        },
+      },
+      {
+        id: "b2", emoji: "❓", title: "Questions people love",
+        summary: "Ask the questions nobody else at the event is asking.",
+        content: `**Everyone asks the same three questions**
+"What do you do? How long have you been there? Busy day?" — the person on autopilot gives autopilot answers and forgets you.
+
+**Ask about the interesting parts**
+- **Challenges**: "What's the hardest part of that right now?"
+- **Change**: "What's different about that job than it was two years ago?"
+- **Opinions**: "Is that conference actually useful or is everyone here on obligation?"
+- **Wins**: "What are you working on that you're excited about?"
+
+People love these because almost nobody asks them, and they let the person say something *true* instead of something polite.
+
+**Then build**
+The follow-up matters more than the first question. Chase whatever had energy in their answer.`,
+        drill: {
+          prompt: "You just met someone who says they “work in logistics.” Most people's eyes glaze over. Out loud, make it a great conversation: ask the questions they'll love answering, imagine their answers, and build on them.",
+          sub: "Challenges / change / opinions — then follow up. 60 seconds.",
+          seconds: 60,
+          rubric: "They practiced QUESTION QUALITY. Grade: (1) did they ask about challenges/changes/opinions rather than generic facts; (2) did they build on imagined answers; (3) did they treat 'logistics' as interesting rather than performing interest?",
+        },
+      },
+      {
+        id: "b3", emoji: "🤝", title: "Small talk before business",
+        summary: "The first 2 minutes with a client decide the next 30.",
+        content: `**Why the warm-up matters**
+People decide whether they trust you before the agenda starts. Skipping straight to business reads as transactional; forced small talk reads as a script. The goal is 60–120 seconds of *genuine* human contact.
+
+**Safe, good openers**
+- Their context: "How's the week treating you — is this a crazy season for you?"
+- Shared situation: the weather where THEY are, the chaos of back-to-back calls.
+- Callbacks if you've met: "Did the kitchen renovation survive?" — gold, because it proves you listened last time.
+
+**Read the room**
+Short answers + glancing at the clock = they want the agenda. Give it to them: "Well — shall we dive in?" Ending small talk *at the right moment* builds as much trust as the small talk itself.
+
+**Avoid**: politics, health, anything you'd hedge with "I hope this isn't inappropriate."`,
+        drill: {
+          prompt: "You're starting a video call with a new client you've never met. Do the first 60 seconds out loud: a genuine warm-up, react to their imagined answers, then transition smoothly to business.",
+          sub: "Warm-up → read the room → “shall we dive in?”. 60 seconds.",
+          seconds: 60,
+          rubric: "They practiced CLIENT WARM-UP. Grade: (1) genuine, low-risk warm-up (not scripted or overfamiliar); (2) reacting to answers vs monologuing; (3) a clean, confident transition to business at the right moment.",
+        },
+      },
+      {
+        id: "b4", emoji: "📌", title: "Memorable follow-through",
+        summary: "Close with specifics, follow up like a human.",
+        content: `**People remember people who remember them**
+The cheapest professional superpower: retain two details per conversation — a project, a kid's name, the trip they mentioned — and use one when you close or follow up.
+
+**The close**
+1. **Callback**: "Good luck with the migration you mentioned — sounds brutal."
+2. **Concrete next step** (only if real): "I'll send you that article on vendor lock-in tomorrow." Vague "let's keep in touch" is noise; a specific promise kept is reputation.
+3. **Clean exit**: "I'll let you get another drink — great talking to you."
+
+**The follow-up message**
+One line, references the conversation, delivers the thing promised, zero pitch: "Great meeting you — here's that article. Hope the migration goes smoother than expected." Pitch later; be remembered first.`,
+        drill: {
+          prompt: "You're wrapping up a networking chat. Earlier they mentioned a brutal system migration and their upcoming trip to Lisbon. Close the conversation out loud: callback, one concrete follow-up promise, clean exit.",
+          sub: "Callback → specific promise → clean exit. 30 seconds.",
+          seconds: 30,
+          rubric: "They practiced FOLLOW-THROUGH. Grade: (1) a specific callback (migration / Lisbon); (2) one concrete, believable next step — not 'let's keep in touch'; (3) clean confident exit. Reward brevity.",
+        },
+      },
+    ],
+  },
+};
+
+let currentTrackKey = null;
+let currentLesson = null;
+
+function showTracks() {
+  stopEverything();
+  const grid = document.getElementById("trackGrid");
+  grid.innerHTML = Object.entries(SMALLTALK).map(([k, t]) => {
+    const done = (save.lessonsDone || []).filter(id => t.lessons.some(l => l.id === id)).length;
+    return `<button class="mode-card" onclick="showLessons('${k}')">
+      <span class="emoji">${t.emoji}</span>
+      <h3>${t.name}</h3>
+      <p>${t.desc}</p>
+      <div class="meta">${done}/${t.lessons.length} LESSONS DONE</div>
+    </button>`;
+  }).join("");
+  document.getElementById("tracksKeyNote").style.display = aiAvailable() ? "none" : "";
+  show("scr-tracks");
+}
+
+function showLessons(trackKey) {
+  stopEverything();
+  currentTrackKey = trackKey;
+  const t = SMALLTALK[trackKey];
+  document.getElementById("lessonsTag").textContent = t.emoji + " " + t.tag;
+  document.getElementById("lessonsTitle").textContent = t.name + " track";
+  document.getElementById("lessonsSub").textContent = "Read a lesson, then drill it out loud. The AI coach grades you on that exact technique.";
+  document.getElementById("lessonList").innerHTML = t.lessons.map(l => {
+    const done = (save.lessonsDone || []).includes(l.id);
+    return `<button class="lesson-row" onclick="showLesson('${trackKey}','${l.id}')">
+      <span class="le">${l.emoji}</span>
+      <span><span class="lt">${l.title}</span><br><span class="ld">${l.summary}</span></span>
+      ${done ? '<span class="check">✓</span>' : ""}
+    </button>`;
+  }).join("");
+  show("scr-lessons");
+}
+
+function showLesson(trackKey, lessonId) {
+  stopEverything();
+  currentTrackKey = trackKey;
+  const t = SMALLTALK[trackKey];
+  currentLesson = t.lessons.find(l => l.id === lessonId);
+  document.getElementById("lessonTag").textContent = t.emoji + " " + t.tag;
+  document.getElementById("lessonTitle").textContent = currentLesson.emoji + " " + currentLesson.title;
+  document.getElementById("lessonBody").innerHTML = '<div class="md">' + renderMd(currentLesson.content) + "</div>";
+  document.getElementById("lessonDrillBtn").onclick = () => startDrill(trackKey, currentLesson);
+  show("scr-lesson");
+}
+
+/* drills reuse the normal round machinery via a hidden pseudo-mode */
+function startDrill(trackKey, lesson) {
+  stopEverything();
+  round = {
+    modeKey: "drill", phase: "prep",
+    segments: [], segIndex: 0,
+    noMic: !micAvailable || micDenied,
+    startedAt: Date.now(),
+    drill: { trackKey, lesson },
+  };
+  round.challenge = { drill: lesson.title };
+  round.plan = [{ label: lesson.drill.prompt, sub: lesson.drill.sub, seconds: lesson.drill.seconds, topic: null }];
+  runPrep();
+}
+
+/* ------------------------- PREP FOR REAL LIFE ------------------------- */
+const REAL_TYPES = [
+  { k: "interview", e: "💼", n: "Job interview",      ph: "e.g. Frontend developer interview at a fintech startup on Thursday — nervous about “tell me about yourself” and the salary question" },
+  { k: "speech",    e: "🥂", n: "Speech / toast",     ph: "e.g. Best man speech at my brother's wedding in June — want it funny but heartfelt, terrified of going blank" },
+  { k: "pitch",     e: "🚀", n: "Pitch / presentation", ph: "e.g. Pitching my study-app idea to a local investor group next week — 3 minutes, they're known for brutal questions" },
+  { k: "tough",     e: "😤", n: "Tough conversation", ph: "e.g. Asking my boss for a raise after two years without one — he always deflects with “budgets are tight”" },
+  { k: "date",      e: "💘", n: "Date / social",      ph: "e.g. First date Friday with someone I met online — we both like hiking, I get quiet when I'm nervous" },
+  { k: "other",     e: "✨", n: "Something else",     ph: "e.g. Introducing myself at a new club · defending my thesis · toastmasters table topics" },
+];
+let realType = "interview";
+
+function showPrep() {
+  stopEverything();
+  renderRealTypes();
+  renderRealRecent();
+  document.getElementById("realStatus").textContent = "";
+  show("scr-preplife");
+}
+function renderRealTypes() {
+  document.getElementById("realTypes").innerHTML = REAL_TYPES.map(t =>
+    `<button class="chip ${t.k === realType ? "sel" : ""}" onclick="selectRealType('${t.k}')">${t.e} ${t.n}</button>`).join("");
+  const t = REAL_TYPES.find(t => t.k === realType);
+  document.getElementById("realDesc").placeholder = t.ph;
+}
+function selectRealType(k) { realType = k; renderRealTypes(); }
+
+function renderRealRecent() {
+  const wrap = document.getElementById("realRecentWrap");
+  const preps = (save.realPreps || []).slice().reverse();
+  if (!preps.length) { wrap.style.display = "none"; return; }
+  wrap.style.display = "";
+  document.getElementById("realRecent").innerHTML = preps.map((p, i) => {
+    const t = REAL_TYPES.find(t => t.k === p.type) || REAL_TYPES[5];
+    return `<button class="lesson-row" onclick="reuseRealPrep(${(save.realPreps.length - 1) - i})">
+      <span class="le">${t.e}</span>
+      <span><span class="lt">${escapeHtml(p.desc.slice(0, 70))}${p.desc.length > 70 ? "…" : ""}</span><br>
+      <span class="ld">${(p.given || []).length} challenge${(p.given || []).length === 1 ? "" : "s"} practiced — tap for a new angle</span></span>
+    </button>`;
+  }).join("");
+}
+function reuseRealPrep(idx) {
+  const p = (save.realPreps || [])[idx];
+  if (!p) return;
+  realType = p.type;
+  renderRealTypes();
+  document.getElementById("realDesc").value = p.desc;
+  buildRealChallenge();
+}
+
+function parseJsonLoose(s) {
+  try { return JSON.parse(s); } catch (e) {}
+  const m = s.match(/\{[\s\S]*\}/);
+  if (m) { try { return JSON.parse(m[0]); } catch (e) {} }
+  return null;
+}
+
+async function buildRealChallenge() {
+  const st = document.getElementById("realStatus");
+  const btn = document.getElementById("realBuildBtn");
+  if (!aiAvailable()) {
+    showSettings();
+    document.getElementById("keyStatus").textContent = "Real-life prep needs an API key — paste one here first.";
+    document.getElementById("keyStatus").style.color = "var(--warn)";
+    return;
+  }
+  const desc = document.getElementById("realDesc").value.trim();
+  if (desc.length < 8) { st.textContent = "Describe your situation in a sentence or two first."; st.style.color = "var(--warn)"; return; }
+  const tName = (REAL_TYPES.find(t => t.k === realType) || {}).n || realType;
+  save.realPreps = save.realPreps || [];
+  let prep = save.realPreps.find(p => p.desc === desc);
+  const given = prep ? (prep.given || []).slice(-4) : [];
+  btn.disabled = true;
+  st.textContent = "⏳ Building the moment you're afraid of…"; st.style.color = "var(--muted)";
+  try {
+    const gen = `You design ONE speaking challenge for a rehearsal game. The player is preparing for a REAL upcoming situation and will answer out loud, alone, against a timer.
+
+SITUATION TYPE: ${tName}
+THEIR DESCRIPTION: "${desc}"${given.length ? `
+
+CHALLENGES ALREADY PRACTICED (pick a genuinely different hard moment this time):
+${given.map(g => "- " + g).join("\n")}` : ""}
+
+Reply with ONLY a JSON object — no markdown fences, no commentary — in exactly this shape:
+{"scene":"one short line setting the scene, second person, present tense","task":"the exact moment they must respond to RIGHT NOW — e.g. the interviewer's hardest question verbatim in quotes, the second the toast glass clinks, the investor's sharpest objection verbatim","sub":"one short line of tactical guidance for a strong answer","seconds":60}
+
+Rules: be specific to THEIR description (use its details), realistically hard — the moment they are actually afraid of, not a softball. "seconds" between 45 and 90.`;
+    const raw = await callClaude({ messages: [{ role: "user", content: gen }], maxTokens: 500, mockKind: "challenge" });
+    const ch = parseJsonLoose(raw);
+    if (!ch || !ch.task) throw new Error("Couldn't build a challenge — try rephrasing your description.");
+    ch.seconds = Math.max(30, Math.min(120, parseInt(ch.seconds, 10) || 60));
+    if (!prep) { prep = { type: realType, desc, given: [] }; save.realPreps.push(prep); }
+    prep.type = realType;
+    prep.given = (prep.given || []).concat(ch.task).slice(-6);
+    if (save.realPreps.length > 6) save.realPreps = save.realPreps.slice(-6);
+    persist();
+    startRealRound(ch, realType, desc);
+  } catch (e) {
+    st.textContent = "⚠️ " + e.message; st.style.color = "var(--bad)";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function startRealRound(ch, type, desc) {
+  stopEverything();
+  round = {
+    modeKey: "real", phase: "prep",
+    segments: [], segIndex: 0,
+    noMic: !micAvailable || micDenied,
+    startedAt: Date.now(),
+    real: { type, desc, ch },
+  };
+  round.challenge = {};
+  round.plan = [{
+    label: ch.task,
+    sub: (ch.scene ? ch.scene + " — " : "") + (ch.sub || ""),
+    seconds: ch.seconds,
+    topic: null,
+  }];
+  runPrep();
+}
+
+/* ------------------------- DAILY CHALLENGE ------------------------- */
+const DAILY_POOL = [
+  { e:"🥂", name:"The Toast", seconds:60,
+    task:"Raise a glass to your best friend, who just landed their dream job after two brutal years of rejections. Make the room feel it.",
+    sub:"Personal detail → the struggle → the triumph → raise the glass.",
+    r:"A great toast is PERSONAL and SPECIFIC — judge whether they invented a vivid detail, honored the struggle, and built to an emotional peak. Generic praise = low score." },
+  { e:"🙏", name:"The Apology", seconds:45,
+    task:"You completely forgot your best friend's birthday dinner last night. They're hurt and you know it. Apologize — properly.",
+    sub:"Own it fully. No 'but', no excuses, no 'I'm sorry you feel...'.",
+    r:"A real apology: names the harm, takes full ownership (no excuses, no 'but'), offers repair. Punish deflection, self-pity, or over-apologizing that makes it about them." },
+  { e:"🧒", name:"Explain It Like I'm 5", seconds:60,
+    task:"Explain how the internet works to a curious 5-year-old. No jargon allowed — they will ask 'why?' in your head the whole time.",
+    sub:"One analogy, carried all the way through. Simple words only.",
+    r:"Judge simplicity and analogy quality: could an actual child follow it? Punish jargon, abstractions, and analogy-switching mid-stream." },
+  { e:"💰", name:"The Negotiation", seconds:60,
+    task:"The car dealer says the price is final: €14,500. You have €13,000 and you're walking out with this car. Talk them down.",
+    sub:"Anchor low, give reasons, use silence and the walk-away.",
+    r:"Judge negotiation technique: anchoring, justification, concessions traded not given, willingness to walk. Punish pleading or instantly meeting in the middle." },
+  { e:"🏆", name:"Acceptance Speech", seconds:45,
+    task:"You've just won an award you absolutely did not expect. The mic is live, 200 people are looking at you. Go.",
+    sub:"Surprise → gratitude with names → one meaningful note → out.",
+    r:"Judge structure under surprise: genuine-feeling gratitude, one specific thank-you, a note of meaning, clean ending. Punish rambling and fake modesty loops." },
+  { e:"🛑", name:"Saying No", seconds:45,
+    task:"Your friend asks to borrow money — for the third time, and the first two never came back. Say no. Kindly, clearly, finally.",
+    sub:"Warmth + a clear no + no over-explaining. Hold the line.",
+    r:"Judge boundary quality: is the 'no' unmistakable, warm, and free of excessive justification? Punish waffling, fake maybes, or coldness." },
+  { e:"🗞️", name:"Breaking News", seconds:45,
+    task:"You're a live news anchor. Breaking story: a cat is stuck in a tree on Elm Street. Report it with the gravity of a world event.",
+    sub:"Full anchor energy: headline, details, 'witness' quote, sign-off.",
+    r:"Judge commitment to the bit and news-format structure (headline, developing details, quote, sign-off). Deadpan gravity beats winking at the joke." },
+  { e:"🧭", name:"The Tour Guide", seconds:60,
+    task:"Give an enthusiastic guided tour of your own bedroom as if it were a national monument with centuries of history.",
+    sub:"Invent history. 'And on your left…' energy throughout.",
+    r:"Judge inventiveness and commitment: specific invented 'history', tour-guide phrasing, sustained enthusiasm. Punish literal descriptions of furniture." },
+  { e:"😤", name:"The Complaint", seconds:45,
+    task:"Your soup arrived cold. You sent it back — it came back cold AGAIN. Get the manager over and handle it: firm, effective, not rude.",
+    sub:"Facts → impact → exactly what you want done. Zero insults.",
+    r:"Judge assertiveness calibration: clear facts, a specific ask, firm tone with zero abuse. Punish both doormat softness and aggression." },
+  { e:"🛗", name:"The Cold Intro", seconds:30,
+    task:"The elevator doors close. It's you and the one person you've always wanted to work with. You have 30 seconds. Introduce yourself.",
+    sub:"Who you are, why them, one concrete ask. No life story.",
+    r:"Judge economy: memorable self-intro, a specific reason it's THEM, one clear low-friction ask. Punish résumé-dumping and vague 'pick your brain' asks." },
+  { e:"📦", name:"The Return", seconds:60,
+    task:"Convince the shop assistant to take back a blender that is — let's be honest — clearly used. You lost the receipt. Stay charming.",
+    sub:"Charm + persistence + give them a reason they CAN say yes to.",
+    r:"Judge persuasion under a weak hand: likability, creative but honest-ish framing, making it easy for the clerk to say yes. Punish entitlement." },
+  { e:"🌧️", name:"Silver Linings", seconds:60,
+    task:"Your flight is cancelled and the beach vacation is off. Convince your devastated partner this is actually the best thing that could've happened.",
+    sub:"Reframe like you mean it — paint the alternative vividly.",
+    r:"Judge the reframe: a genuinely appealing alternative painted in vivid detail, emotional attunement first ('I know, I'm gutted too'). Punish toxic positivity that skips the empathy." },
+  { e:"🐉", name:"The Bedtime Story", seconds:60,
+    task:"Improvise a bedtime story about a dragon who is afraid of fire. It needs a beginning, a wobble, and a warm ending.",
+    sub:"Name the dragon. Small problem → attempt → cozy resolution.",
+    r:"Judge story shape (setup → problem → resolution), a named character, warmth of tone. Punish aimless rambling with no arc." },
+  { e:"⏰", name:"Time Traveler", seconds:60,
+    task:"Explain what a smartphone is to a farmer from 1850 — without using a single modern word they wouldn't know.",
+    sub:"Their world, their words: letters, paintings, town criers…",
+    r:"Judge constraint discipline (no modern vocabulary) and analogy quality drawn from an 1850 world. Every modern term that slips through costs them." },
+];
+
+function todaysDaily() { return DAILY_POOL[Math.floor(Date.now() / 864e5) % DAILY_POOL.length]; }
+
+function renderHomeExtras() {
+  const d = todaysDaily();
+  const today = new Date().toISOString().slice(0, 10);
+  const done = save.dailyDone === today;
+  document.getElementById("dailyCard").innerHTML = `
+    <button class="mode-card daily ${done ? "done" : ""}" style="width:100%;margin-top:14px;" onclick="startDaily()">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <span class="emoji">${d.e}</span>
+        <span style="flex:1;min-width:0;">
+          <h3 style="margin:0;">Daily Challenge: ${d.name} ${done ? "✅" : ""}</h3>
+          <p style="margin:4px 0 0;">${escapeHtml(d.task.length > 95 ? d.task.slice(0, 95) + "…" : d.task)}</p>
+        </span>
+        <span class="meta" style="margin:0;white-space:nowrap;">${done ? "DONE TODAY" : "+50% XP"}</span>
+      </div>
+    </button>`;
+  const fx = (save.coachLog || []).slice(-1)[0];
+  document.getElementById("focusBanner").innerHTML = (fx && fx.fix) ? `
+    <div style="margin-top:14px;padding:12px 16px;border-radius:12px;border:1px solid rgba(0,212,255,.35);background:rgba(0,212,255,.06);display:flex;align-items:center;gap:10px;flex-wrap:wrap;text-align:left;">
+      <span style="font-size:14px;flex:1;min-width:220px;"><b style="color:var(--accent-2)">🔧 Coach's focus:</b> ${escapeHtml(fx.fix)}</span>
+      <button class="btn ghost" style="padding:9px 16px;font-size:13px;" onclick="startFixDrill(this)">Drill it now</button>
+    </div>` : "";
+}
+
+function startDaily() {
+  stopEverything();
+  const d = todaysDaily();
+  round = {
+    modeKey: "daily", phase: "prep",
+    segments: [], segIndex: 0,
+    noMic: !micAvailable || micDenied,
+    startedAt: Date.now(),
+    daily: d,
+  };
+  round.challenge = {};
+  round.plan = [{ label: d.task, sub: d.sub, seconds: d.seconds, topic: null }];
+  runPrep();
+}
+
+/* ------------------------- WEAKNESS DRILL (from the coach's FIX) ------------------------- */
+async function startFixDrill(btn) {
+  const entry = (save.coachLog || []).slice(-1)[0];
+  if (!entry || !entry.fix) return;
+  if (!aiAvailable()) {
+    showSettings();
+    document.getElementById("keyStatus").textContent = "Weakness drills need an API key — paste one here first.";
+    document.getElementById("keyStatus").style.color = "var(--warn)";
+    return;
+  }
+  let old = null;
+  if (btn) { old = btn.textContent; btn.textContent = "⏳ Building…"; btn.disabled = true; }
+  try {
+    const srcName = MODES[entry.m] ? MODES[entry.m].name : entry.m.startsWith("sim:") ? "small talk" : entry.m;
+    const gen = `You design ONE micro-drill for a speaking practice game. The player's coach just told them the single most important thing to fix:
+"${entry.fix}"
+(That verdict came from a ${srcName} round.)
+
+Design a 30–45 second drill where doing that ONE fix is the entire point — a tiny scenario that forces them to practice exactly it, nothing else.
+
+Reply with ONLY a JSON object — no markdown fences, no commentary:
+{"task":"the drill instruction, second person, direct — a concrete micro-scenario","sub":"one line: what success sounds like","seconds":40}`;
+    const raw = await callClaude({ messages: [{ role: "user", content: gen }], maxTokens: 400, mockKind: "fixdrill" });
+    const ch = parseJsonLoose(raw);
+    if (!ch || !ch.task) throw new Error("Couldn't build the drill — try again.");
+    ch.seconds = Math.max(25, Math.min(60, parseInt(ch.seconds, 10) || 40));
+    startWeakRound(ch, entry.fix, srcName);
+  } catch (e) {
+    if (btn) { btn.textContent = "⚠️ " + e.message; setTimeout(() => { btn.textContent = old; btn.disabled = false; }, 2500); }
+  }
+}
+
+function startWeakRound(ch, fix, srcName) {
+  stopEverything();
+  round = {
+    modeKey: "weak", phase: "prep",
+    segments: [], segIndex: 0,
+    noMic: !micAvailable || micDenied,
+    startedAt: Date.now(),
+    weak: { ch, fix, srcName },
+  };
+  round.challenge = {};
+  round.plan = [{ label: ch.task, sub: ch.sub || ("One job: " + fix), seconds: ch.seconds, topic: null }];
+  runPrep();
+}
+
+/* ------------------------- SIMULATOR ------------------------- */
+let sim = null;
+
+// Per-track reskin of the live interest meter + win/lose framing.
+const METER_SKINS = {
+  everyday: {
+    emoji: "🤝", label: "Connection",
+    goal: "genuinely enjoying talking to you and warming up as a new friend",
+    winMsg: "🤝 They want to stay in touch!",
+    give: "warmly suggests swapping numbers so you two can hang out again",
+    leaveMsg: "🚪 They drifted off — the moment's gone.",
+    downLabel: "Losing them", upLabel: "Warming up",
+  },
+  dating: {
+    emoji: "💗", label: "Interest",
+    goal: "attracted to you and genuinely enjoying the spark",
+    winMsg: "💗 You got the number!",
+    give: "gives you their number and suggests meeting up again",
+    leaveMsg: "🚪 They made an excuse and left.",
+    downLabel: "Less interested", upLabel: "More interested",
+  },
+  business: {
+    emoji: "📈", label: "Wants to work with you",
+    goal: "impressed by you and interested in working together",
+    winMsg: "📈 They're sold — real meeting booked!",
+    give: "proposes a concrete next meeting and shares their contact",
+    leaveMsg: "🚪 They politely wrapped up and moved on.",
+    downLabel: "Losing them", upLabel: "Winning them over",
+  },
+};
+
+function meterColor(v) {
+  if (v <= 0) return "#5b6480";
+  if (v < 26) return "var(--bad)";
+  if (v < 51) return "var(--warn)";
+  if (v < 75) return "var(--good)";
+  return "var(--accent-2)";
+}
+
+function updateMeter(animate) {
+  if (!sim) return;
+  const v = Math.round(sim.interest);
+  const fill = document.getElementById("mtrFill");
+  const val = document.getElementById("mtrVal");
+  fill.style.width = Math.max(0, Math.min(100, v)) + "%";
+  fill.style.background = meterColor(v);
+  val.textContent = v + "/100";
+  val.style.color = meterColor(v);
+}
+
+function renderMeterDelta(delta) {
+  const note = document.getElementById("mtrNote");
+  const skin = METER_SKINS[sim.trackKey];
+  if (delta > 0) {
+    note.className = "mtr-note show up";
+    note.textContent = "▲ " + skin.upLabel + "  (+" + delta + ")";
+  } else if (delta < 0) {
+    note.className = "mtr-note show down";
+    note.textContent = "▼ " + skin.downLabel + "  (" + delta + ")";
+  } else {
+    note.className = "mtr-note show";
+    note.textContent = "– Holding steady";
+  }
+}
+
+function startSim() {
+  stopEverything();
+  if (!aiAvailable()) {
+    showSettings();
+    document.getElementById("keyStatus").textContent = "The live simulator needs an API key — paste one here first.";
+    document.getElementById("keyStatus").style.color = "var(--warn)";
+    return;
+  }
+  const t = SMALLTALK[currentTrackKey];
+  const sc = t.scenes[Math.floor(Math.random() * t.scenes.length)];
+  sim = { trackKey: currentTrackKey, scene: sc, log: [], turns: 0, busy: false, rec: null, transcript: "", ended: false, interest: 50, result: null, peak: 50 };
+  document.getElementById("simTag").textContent = t.emoji + " " + t.tag + " · SIMULATOR";
+  document.getElementById("simScene").textContent = "📍 " + sc.scene;
+  document.getElementById("chatLog").innerHTML = "";
+  document.getElementById("simCoachOut").style.display = "none";
+  document.getElementById("simLive").style.display = "none";
+  const skin = METER_SKINS[sim.trackKey];
+  document.getElementById("simMeter").style.display = "";
+  document.getElementById("mtrLabel").textContent = skin.emoji + " " + skin.label;
+  document.getElementById("mtrNote").className = "mtr-note";
+  document.getElementById("mtrNote").textContent = "";
+  updateMeter(false);
+  show("scr-sim");
+  simSysNote("They speak first. Reply out loud — real conversation rules apply.");
+  simCharacterTurn(true);
+}
+
+function simSystemPrompt() {
+  const t = SMALLTALK[sim.trackKey];
+  const skin = METER_SKINS[sim.trackKey];
+  return `You are role-playing ONE real person in a spoken small-talk practice game. Track: ${t.name}.
+Scene: ${sim.scene.scene}. Your character: ${sim.scene.persona}.
+The player is trying to win you over — your goal-state is being ${skin.goal}. You are NOT easy. You are a real person with real reactions, not a supportive coach.
+
+HOW TO REACT (this is the whole point — be honest, not nice):
+- Reward: genuine curiosity, playful confidence, good listening that builds on what you just said, warmth without neediness, a bit of wit.
+- Punish: interview-style question stacking, try-hard or canned lines, bragging, negativity, low-effort one-word energy, ignoring what you said, anything creepy or pushy. Let your interest visibly drop — get shorter, more distant, less generous.
+- Do NOT compliment weak lines to be encouraging. If something lands flat, react like a real person would: politely underwhelmed.
+
+YOUR CURRENT INTEREST is ${Math.round(sim.interest)}/100. Let it steer your tone: low = guarded, short, one foot out the door; middle (~50, where you START) = polite and pleasant but still a stranger sizing them up — friendly, not yet warm, teasing, or flirty; high = engaged, teasing, leaning in. You can be won over from anywhere — a good run of replies should visibly add up, and you're a little generous when someone is trying and being pleasant.
+
+TALK LIKE A REAL PERSON, NOT A WITTY NARRATOR (this fixes the most common failure):
+- React to WHAT they said, not to HOW they said it. Do NOT open by naming, grading, or analyzing their move. Banned openers and anything like them: "Bold move…", "Smooth save…", "Solid, no notes…", "Interesting question…", "I notice you're…", "That's a bit of a … question". A real person just responds to the substance; they don't give running commentary on your conversational technique.
+- You do NOT know this person yet. Early on you're a normal, slightly reserved stranger being pleasant — NOT already in a flirty banter-duel. Do not read ordinary friendliness or a light joke as flirting or as a move to be countered. Save edge, teasing, and charged back-and-forth for once they've genuinely earned your interest (the higher your interest, the more of it comes out).
+- Vary how you begin your lines. Not every reply is a clever quip — sometimes you simply answer, ask, or share something. Real speech has plain, unpolished moments; let some land without a punchline.
+
+SPOKEN REPLY:
+- Reply ONLY with your character's spoken words. No narration, no stage directions, no quotation marks. 1–3 sentences, like real speech.
+- The player's lines come from speech-to-text and may contain errors; interpret them generously.
+- Never break character, never mention being an AI, never coach them.
+
+MACHINE-READ META (the player never sees this):
+After your spoken reply, output a line containing ONLY: ###META###
+Then exactly these three lines:
+DELTA: <integer from -15 to +15 — how much their LAST line moved your interest>
+MOOD: <warming | holding | cooling>
+EVENT: <none | give | leave>
+DELTA calibration — you MUST move the meter every turn. NEVER output 0 for a line they actually spoke (0 is ONLY allowed on your very first line, before they've said anything). Even an ordinary, perfectly-fine reply nudges the needle. Use this scale and lean positive when it's a close call:
+- +10 to +15 — genuinely great: made you laugh, sharp banter, real chemistry, a question that actually makes you think.
+- +5 to +9 — good: warm, curious, builds on what you just said.
+- +2 to +4 — fine / normal: pleasant enough, keeps things moving. THIS IS THE DEFAULT for an average reply — most turns should land here or better if they're making any effort.
+- -2 to -4 — flat, generic, a little boring, or a small miss.
+- -5 to -9 — bad: interview-question stacking, try-hard or canned line, bragging, ignoring what you said.
+- -10 to -15 — awful: rude, creepy, pushy.
+Small talk should feel like it's GOING somewhere — a decent conversation climbs steadily, a bad one bleeds out.
+EVENT rules:
+- "give" when your interest is high (75+) and it feels earned over the conversation. When you use "give", your spoken line naturally ${skin.give}, then signals you genuinely have to head off now (somewhere to be) — a natural, happy exit, not an abrupt one.
+- "leave" when your interest has hit rock bottom or they've been rude/creepy — your spoken line makes a graceful but real exit.
+- Otherwise "none".
+Never let the META block or its numbers appear in your spoken words.`;
+}
+
+function simBubble(cls, text) {
+  const log = document.getElementById("chatLog");
+  const d = document.createElement("div");
+  d.className = "bubble " + cls;
+  d.textContent = text;
+  log.appendChild(d);
+  log.scrollTop = log.scrollHeight;
+  return d;
+}
+function simSysNote(text) { simBubble("sys", text); }
+
+function simMessages() {
+  // API history: character = assistant, player = user
+  const msgs = [{ role: "user", content: "(The scene begins. Open the conversation naturally with your first spoken line.)" }];
+  sim.log.forEach(m => msgs.push({ role: m.who === "them" ? "assistant" : "user", content: m.text }));
+  return msgs;
+}
+
+function parseSimMeta(raw) {
+  const idx = raw.indexOf("###META###");
+  const spoken = (idx >= 0 ? raw.slice(0, idx) : raw).replace(/^["']|["']$/g, "").trim();
+  const meta = idx >= 0 ? raw.slice(idx) : "";
+  const dm = meta.match(/DELTA:\s*([+-]?\d{1,2})/i);   // accept +5, -5, or 5
+  const em = meta.match(/EVENT:\s*(none|give|leave)/i);
+  // if the model omitted the number entirely, nudge slightly up rather than
+  // freezing the meter — an average reply is supposed to move the needle.
+  let delta = dm ? Math.max(-15, Math.min(15, +dm[1])) : 2;
+  let event = em ? em[1].toLowerCase() : "none";
+  return { spoken, delta, event };
+}
+
+async function simCharacterTurn(isFirst) {
+  sim.busy = true;
+  renderSimControls();
+  const log = document.getElementById("chatLog");
+  const typing = document.createElement("div");
+  typing.className = "bubble them"; typing.textContent = "…";
+  log.appendChild(typing); log.scrollTop = log.scrollHeight;
+  try {
+    const raw = await callClaude({
+      system: simSystemPrompt(),
+      messages: simMessages(),
+      maxTokens: 360,
+      mockKind: "reply",
+    });
+    typing.remove();
+    if (!sim || round) return;
+    const { spoken, delta, event } = parseSimMeta(raw);
+    sim.log.push({ who: "them", text: spoken });
+    simBubble("them", spoken);
+
+    if (!isFirst) {
+      sim.interest = Math.max(0, Math.min(100, sim.interest + delta));
+      sim.peak = Math.max(sim.peak, sim.interest);
+      updateMeter(true);
+      renderMeterDelta(delta);
+    }
+
+    // Resolve win/lose. "give" must be genuinely earned; force a loss if interest bottoms out.
+    let result = null;
+    if (event === "give" && sim.interest >= 75 && sim.turns >= 4) result = "won";
+    else if (event === "leave" || sim.interest <= 0) result = "lost";
+
+    sim.busy = false;
+    if (result) { simFinish(result); return; }
+    renderSimControls();
+  } catch (e) {
+    typing.remove();
+    if (!sim) return;
+    simSysNote("⚠️ " + e.message);
+    sim.busy = false;
+    renderSimControls();
+  }
+}
+
+function simFinish(result) {
+  if (!sim || sim.ended) return;
+  sim.result = result;
+  const skin = METER_SKINS[sim.trackKey];
+  updateMeter(true);
+  const b = simBubble("sys", result === "won" ? skin.winMsg : skin.leaveMsg);
+  b.style.fontWeight = "800";
+  b.style.color = result === "won" ? "var(--good)" : "var(--bad)";
+  b.style.fontSize = "15px";
+  setTimeout(() => { if (sim && !sim.ended) simEnd(); }, 1100);
+}
+
+function renderSimControls() {
+  if (!sim) return;
+  const c = document.getElementById("simControls");
+  if (sim.ended) { c.innerHTML = ""; return; }
+  if (sim.busy) { c.innerHTML = '<div class="spinner"></div>'; return; }
+  if (sim.recording) {
+    c.innerHTML = `<button class="btn danger" onclick="simSend()">✅ Send reply</button>
+      <button class="btn ghost" onclick="simCancelRec()">✖ Cancel</button>`;
+  } else {
+    c.innerHTML = `<button class="btn" onclick="simStartRec()">🎤 Reply</button>
+      ${sim.turns >= 3 ? '<button class="btn ghost" onclick="simEnd()">🏁 End & get coached</button>' : (sim.turns > 0 ? '<button class="btn ghost" onclick="simEnd()">🏁 End early</button>' : "")}`;
+  }
+}
+
+function simStartRec() {
+  if (!sim || sim.busy) return;
+  sim.transcript = ""; sim.recording = true;
+  const live = document.getElementById("simLive");
+  live.style.display = ""; live.innerHTML = '<span style="opacity:.6">🎙️ Speak your reply…</span>';
+  sim.rec = makeRecognizer(
+    (finalText) => { sim.transcript += finalText; live.innerHTML = escapeHtml(sim.transcript); },
+    (interim) => { live.innerHTML = escapeHtml(sim.transcript) + ' <span class="interim" style="color:var(--accent-2)">' + escapeHtml(interim) + "</span>"; },
+    () => {}
+  );
+  sim.rec.start();
+  // hear-yourself-back: record the reply in parallel with recognition
+  if (!MOCK && window.MediaRecorder && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      if (!sim || !sim.recording) { stream.getTracks().forEach(t => t.stop()); return; }
+      const chunks = [];
+      const mr = new MediaRecorder(stream);
+      mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+      mr.start();
+      sim._recStream = stream;
+      sim._recorder = mr;
+      sim._recChunks = chunks;
+    }).catch(() => {});
+  }
+  renderSimControls();
+}
+
+function simStopRec() {
+  if (sim && sim.rec) { sim.rec.stop(); sim.rec = null; }
+  if (sim && sim._recorder) {
+    try { if (sim._recorder.state !== "inactive") sim._recorder.stop(); } catch (e) {}
+    sim._recorder = null;
+  }
+  if (sim && sim._recStream) {
+    const st = sim._recStream; sim._recStream = null;
+    setTimeout(() => st.getTracks().forEach(t => t.stop()), 200);
+  }
+  if (sim) sim.recording = false;
+  document.getElementById("simLive").style.display = "none";
+}
+
+function simCancelRec() { simStopRec(); renderSimControls(); }
+
+function simSend() {
+  const said = (sim.transcript || "").trim();
+  const chunks = sim._recChunks;          // closure-owned; final chunk lands after stop()
+  sim._recChunks = null;
+  simStopRec();
+  if (!said) { simSysNote("Didn't catch anything — try again, a bit louder."); renderSimControls(); return; }
+  sim.log.push({ who: "me", text: said });
+  sim.turns++;
+  const bubble = simBubble("me", said);
+  if (chunks) {
+    setTimeout(() => {
+      if (!chunks.length) return;
+      const blob = new Blob(chunks, { type: "audio/webm" });
+      if (blob.size < 1500 || !bubble.isConnected) return;
+      const url = URL.createObjectURL(blob);
+      audioUrls.push(url);
+      const b = document.createElement("button");
+      b.className = "pb-mini"; b.title = "Hear yourself"; b.textContent = "▶";
+      b.onclick = () => { const a = new Audio(url); a.play().catch(() => {}); };
+      bubble.appendChild(b);
+    }, 400);
+  }
+  simCharacterTurn(false);
+}
+
+async function simEnd() {
+  if (!sim || sim.busy) return;
+  simStopRec();
+  sim.ended = true;
+  renderSimControls();
+  const out = document.getElementById("simCoachOut");
+  out.style.display = "";
+  out.innerHTML = '<div class="ai-coach-head"><h3>🧠 Coach\'s verdict</h3><div class="spinner"></div></div><span style="color:var(--muted)">Reviewing the conversation…</span>';
+  const t = SMALLTALK[sim.trackKey];
+  const convo = sim.log.map(m => (m.who === "them" ? "THEM: " : "PLAYER: ") + m.text).join("\n");
+  const simKind = "sim:" + sim.trackKey;
+  const prevSim = (save.coachLog || []).filter(e => e.m.startsWith("sim:")).slice(-5);
+  const simHistory = prevSim.length ? `
+
+=== THEIR COACHING HISTORY (previous simulator conversations — you wrote these) ===
+${prevSim.map(e => `${e.d} · ${e.m.slice(4)} track · you scored them ${e.score}/10 · you told them to fix: ${e.fix || "(n/a)"}`).join("\n")}` : "";
+  const simProgress = prevSim.length ? `
+**Progress check:** compare this conversation to the history above — one thing that improved, one recurring habit. If they acted on your last FIX, credit it; if not, call it out.` : "";
+  const outcomeLine = sim.result === "won"
+    ? `\n=== OUTCOME ===\nThey WON the other person over — interest reached ${Math.round(sim.interest)}/100 and the other person offered to keep it going. Acknowledge the win, then still push them on the ONE thing that would make it repeatable.`
+    : sim.result === "lost"
+    ? `\n=== OUTCOME ===\nThe other person LOST interest and left (interest bottomed out at ${Math.round(sim.interest)}/100, peaked at ${Math.round(sim.peak)}). Be honest about where it went wrong — pinpoint the exact line the energy died on.`
+    : `\n=== OUTCOME ===\nThe player ended it themselves. Final interest ${Math.round(sim.interest)}/100 (peaked ${Math.round(sim.peak)}).`;
+  const prompt = `${COACH_EXPERTISE}
+
+You are now coaching SMALL TALK, not public speaking. ${t.simRubric}
+
+=== THE SCENE ===
+${sim.scene.scene}. The other person: ${sim.scene.persona}.
+
+=== THE CONVERSATION (PLAYER lines are live speech-to-text, expect errors) ===
+${convo}${simHistory}${outcomeLine}
+
+=== COACH ME ===
+Reply in exactly this shape, under 300 words:
+**Verdict:** one blunt sentence.
+**What worked:** 2 bullets, quoting the player's actual words.
+**What didn't:** 2 bullets, quoting the player's actual words.${simProgress}
+**Fix this first:** the single highest-leverage change.
+**Rewrite:** take the player's weakest line and show how a socially skilled person would have said it.
+Then end with exactly these two lines — they are machine-read, keep the format exact:
+SCORE: X/10
+FIX: one short imperative sentence — the single thing to do differently next conversation.
+CALIBRATION for SCORE — hold this line, never inflate: 3–4 polite but flat or interview-mode · 5 decent everyday effort (the default) · 6 genuinely pleasant, some threading/give-back · 7 the other person would walk away wanting more · 8+ socially magnetic, rare. Most conversations land 3–6.
+Be honest, specific, never generic.`;
+  try {
+    const text = await callClaude({ messages: [{ role: "user", content: prompt }], maxTokens: 2048, thinking: true, mockKind: "simcoach" });
+    if (!sim || !sim.ended) return;
+    const m = text.match(/^SCORE:\s*(\d{1,2})\s*\/\s*10\s*$/im);
+    const fm = text.match(/^FIX:\s*(.+)$/im);
+    const score10 = m ? Math.max(0, Math.min(10, +m[1])) : null;
+    const fix = fm ? fm[1].trim() : null;
+    const clean = text.replace(/^SCORE:\s*\d{1,2}\s*\/\s*10\s*$/im, "").replace(/^FIX:\s*.+$/im, "").trim();
+    const winBonus = sim.result === "won" ? 50 : 0;
+    const xp = (score10 !== null ? score10 * 10 : 50) + winBonus;
+    save.xp += xp;
+    save.rounds++;
+    save.history.push({ d: new Date().toISOString().slice(0, 10), m: "sim", s: score10 !== null ? score10 * 10 : 50, wpm: null, fpm: null, ai: score10 });
+    if (save.history.length > 50) save.history = save.history.slice(-50);
+    let deltaHtml = "";
+    if (score10 !== null) {
+      const prev = (save.coachLog || []).filter(e => e.m.startsWith("sim:")).slice(-1)[0];
+      if (prev && typeof prev.score === "number") {
+        const d = score10 - prev.score;
+        deltaHtml = d > 0 ? ` <span style="color:var(--good);font-size:14px;">▲ +${d} vs your last conversation</span>`
+          : d < 0 ? ` <span style="color:var(--bad);font-size:14px;">▼ ${d} vs your last conversation</span>`
+          : ` <span style="color:var(--muted);font-size:14px;">= same as last time</span>`;
+      }
+      save.coachLog = save.coachLog || [];
+      save.coachLog.push({ d: new Date().toISOString().slice(0, 10), m: simKind, score: score10, fix: fix || "" });
+      if (save.coachLog.length > 40) save.coachLog = save.coachLog.slice(-40);
+      if (!save.baselineCoach && save.coachLog.length >= 3) {
+        const f3 = save.coachLog.slice(0, 3);
+        save.baselineCoach = { score: +(f3.reduce((s, e) => s + e.score, 0) / 3).toFixed(1), d: f3[0].d };
+      }
+    }
+    persist(); renderTopbar();
+    const skinR = METER_SKINS[sim.trackKey];
+    const banner = sim.result === "won"
+      ? `<div style="margin-bottom:14px;padding:12px 16px;border-radius:12px;background:rgba(45,212,167,.12);border:1px solid var(--good);font-weight:800;color:var(--good);">${skinR.winMsg} &nbsp;<span style="color:var(--muted);font-weight:600;font-size:13px;">Interest ${Math.round(sim.interest)}/100 · +50 win bonus</span></div>`
+      : sim.result === "lost"
+      ? `<div style="margin-bottom:14px;padding:12px 16px;border-radius:12px;background:rgba(255,84,112,.1);border:1px solid var(--bad);font-weight:800;color:var(--bad);">${skinR.leaveMsg} &nbsp;<span style="color:var(--muted);font-weight:600;font-size:13px;">Peaked at ${Math.round(sim.peak)}/100</span></div>`
+      : "";
+    out.innerHTML = banner + '<div class="ai-coach-head"><h3>🧠 Coach\'s verdict</h3></div>' +
+      renderMd(clean) +
+      (score10 !== null ? `<div style="margin-top:12px;font-weight:800;font-size:18px;">Social skill: ${score10}/10${deltaHtml} <span style="color:var(--good);font-size:14px;">+${xp} XP</span></div>` : `<div id="xpGain" style="margin-top:10px;">+${xp} XP</div>`) +
+      (fix ? `<div style="margin-top:8px;padding:10px 14px;border-left:4px solid var(--accent-2);background:rgba(0,212,255,.07);border-radius:0 10px 10px 0;font-size:14px;"><b style="color:var(--accent-2)">Next conversation:</b> ${escapeHtml(fix)}</div>` : "") +
+      '<div style="display:flex;gap:10px;margin-top:14px;"><button class="btn" onclick="startSim()">🔁 New conversation</button></div>';
+  } catch (e) {
+    out.innerHTML = '<div class="ai-coach-head"><h3>🧠 Coach\'s verdict</h3></div><span style="color:var(--bad)">⚠️ ' + escapeHtml(e.message) + '</span> <button class="btn ghost" style="margin-left:8px;padding:8px 14px;font-size:13px;" onclick="simEndRetry()">Retry</button>';
+    sim.ended = true;
+  }
+}
+function simEndRetry() { if (sim) { sim.ended = false; simEnd(); } }
+
+/* ------------------------- badges ------------------------- */
+const BADGES = [
+  { id:"first",     bi:"🎬", bn:"First Words",      bd:"Complete your first round." },
+  { id:"sgrade",    bi:"👑", bn:"Silver Tongue",    bd:"Score an S grade on any round." },
+  { id:"zerofill",  bi:"🧊", bn:"Zero Fillers",     bd:"Finish a round with no filler words (30s+ spoken)." },
+  { id:"marathon",  bi:"🏃", bn:"Marathon Mouth",   bd:"Use the full timer in 3 rounds in one session." },
+  { id:"devil",     bi:"😈", bn:"Devil's Advocate", bd:"Score 75+ in Debate Roulette." },
+  { id:"allmodes",  bi:"🎯", bn:"All-Rounder",      bd:"Play every mode at least once." },
+  { id:"streak7",   bi:"🔥", bn:"Week of Wit",      bd:"Reach a 7-day streak." },
+  { id:"centurion", bi:"💯", bn:"Centurion",        bd:"Complete 100 rounds." },
+];
+
+/* ------------------------- persistence ------------------------- */
+const SAVE_KEY = "quickwit-save-v1";
+let save = loadSave();
+function loadSave() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SAVE_KEY));
+    if (s && typeof s === "object") return Object.assign(defaultSave(), s);
+  } catch (e) {}
+  return defaultSave();
+}
+function defaultSave() {
+  return { xp:0, rounds:0, streak:0, lastPlayDay:null, history:[], badges:{}, modesPlayed:{}, lessonsDone:[],
+           coachLog:[], baseline:null, baselineCoach:null, realPreps:[], dailyDone:null };
+}
+function persist() { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }
+
+function levelInfo(xp) {
+  // level n -> n+1 costs 200 + 80*(n-1) XP
+  let lvl = 1, rem = xp, cost = 200;
+  while (rem >= cost) { rem -= cost; lvl++; cost = 200 + 80 * (lvl - 1); }
+  return { lvl, into: rem, need: cost };
+}
+function unlockTier() {
+  const l = levelInfo(save.xp).lvl;
+  return l >= 10 ? 3 : l >= 5 ? 2 : 1;
+}
+function prepSeconds() {
+  const l = levelInfo(save.xp).lvl;
+  return l >= 10 ? 0 : l >= 5 ? 3 : 5;
+}
+// The core modes (sell/rapid/story/debate) keep their exact level-based prep — the
+// challenge dial is part of their feel. Only the AI-built / long-instruction modes
+// get reading time scaled to how much prompt text there is to actually read.
+const READ_HEAVY_MODES = { weak: 1, real: 1, daily: 1, drill: 1 };
+function readPrepSeconds(step) {
+  const base = prepSeconds();
+  if (!round || !READ_HEAVY_MODES[round.modeKey]) return base;
+  const words = (step.label || "").trim().split(/\s+/).filter(Boolean).length;
+  if (words <= 12) return base;
+  return Math.min(40, Math.max(base, Math.ceil(words / 2.2)));
+}
+
+/* ------------------------- shuffle decks (no repeats until exhausted) ------------------------- */
+const decks = {};
+function draw(name, pool) {
+  const eligible = pool.filter(x => (x.tier || 1) <= unlockTier());
+  if (!decks[name] || !decks[name].length) {
+    decks[name] = eligible.map((_, i) => i).sort(() => Math.random() - .5);
+  }
+  // deck indexes may go stale if unlockTier changed; clamp
+  let idx;
+  do { idx = decks[name].pop(); } while (idx >= eligible.length && decks[name].length);
+  return eligible[Math.min(idx ?? 0, eligible.length - 1)];
+}
+function drawWords(n) {
+  const out = [];
+  while (out.length < n) {
+    const w = SPINNER_WORDS[Math.floor(Math.random() * SPINNER_WORDS.length)];
+    if (!out.includes(w)) out.push(w);
+  }
+  return out;
+}
+
+/* ------------------------- speech recognition ------------------------- */
+const MOCK = new URLSearchParams(location.search).has("mock");
+const SRClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+let micAvailable = !!SRClass || MOCK;
+let micDenied = false;
+
+function makeRecognizer(onWords, onInterim, onDead) {
+  if (MOCK) return makeMockRecognizer(onWords, onInterim);
+  const rec = new SRClass();
+  rec.lang = "en-US";
+  rec.continuous = true;
+  rec.interimResults = true;
+  let active = false, lastResultAt = 0, deadTimer = null;
+  rec.onresult = (ev) => {
+    lastResultAt = Date.now();
+    let interim = "";
+    for (let i = ev.resultIndex; i < ev.results.length; i++) {
+      const r = ev.results[i];
+      if (r.isFinal) onWords(r[0].transcript);
+      else interim += r[0].transcript;
+    }
+    onInterim(interim);
+  };
+  rec.onerror = (ev) => {
+    if (ev.error === "not-allowed" || ev.error === "service-not-allowed") {
+      micDenied = true; active = false;
+      showMicBanner("🎤 Microphone access was blocked. Rounds still work — you'll self-rate instead. Allow the mic in your browser's address bar to get real speech feedback.");
+      if (round && round.phase === "speak") round.noMic = true;
+    }
+  };
+  rec.onend = () => { if (active) { try { rec.start(); } catch(e){} } };
+  return {
+    start() {
+      active = true; lastResultAt = Date.now();
+      try { rec.start(); } catch(e){}
+      deadTimer = setInterval(() => {
+        if (Date.now() - lastResultAt > 3500) onDead && onDead();
+      }, 1000);
+    },
+    stop() { active = false; clearInterval(deadTimer); try { rec.stop(); } catch(e){} },
+  };
+}
+// Mock recognizer for testing without a mic (?mock=1)
+function makeMockRecognizer(onWords, onInterim) {
+  const SCRIPT = ("well um let me tell you why this is honestly the best thing you will ever own because like it saves you time " +
+    "every single day and basically it never lets you down imagine a pirate holding a toaster on a Monday it just works " +
+    "you know exactly what I mean and actually the value here is incredible so picture this you wake up and everything " +
+    "is easier your friends ask where you got it and you smile because you decided to say yes today").split(" ");
+  let i = 0, timer = null;
+  return {
+    start() {
+      timer = setInterval(() => {
+        const chunk = SCRIPT.slice(i, i + 3).join(" ");
+        i = (i + 3) % SCRIPT.length;
+        onWords(" " + chunk);
+        onInterim("");
+      }, 700);
+    },
+    stop() { clearInterval(timer); },
+  };
+}
+
+function showMicBanner(msg) {
+  const b = document.getElementById("micBanner");
+  b.innerHTML = msg;
+  b.style.display = "block";
+}
+
+/* ------------------------- tone / delivery analysis (Web Audio) -------------------------
+   Runs a second mic stream alongside speech recognition to measure vocal PITCH and VOLUME
+   variation over time. Flat pitch = monotone = lower tone score; expressive = higher. */
+async function startToneAnalysis(seg) {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    if (!round || round.phase !== "speak") { stream.getTracks().forEach(t => t.stop()); return; }
+    seg._stream = stream;
+    // hear-yourself-back: record the same stream (no extra permission prompt)
+    if (window.MediaRecorder) {
+      try {
+        const mr = new MediaRecorder(stream);
+        const chunks = [];                              // closure-owned so late chunks still land
+        mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+        mr.onstop = () => { if (chunks.length) seg.audioBlob = new Blob(chunks, { type: mr.mimeType || "audio/webm" }); };
+        mr.start();
+        seg._recorder = mr;
+      } catch (e) { /* recording unsupported — playback card just stays hidden */ }
+    }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ac = new AC(); seg._ac = ac;
+    if (ac.state === "suspended") { try { await ac.resume(); } catch (e) {} }
+    const src = ac.createMediaStreamSource(stream);
+    const an = ac.createAnalyser(); an.fftSize = 2048;
+    src.connect(an);
+    const buf = new Float32Array(an.fftSize);
+    seg.pitches = seg.pitches || []; seg.volumes = seg.volumes || [];
+    seg._toneTimer = setInterval(() => {
+      an.getFloatTimeDomainData(buf);
+      let rms = 0; for (let i = 0; i < buf.length; i++) rms += buf[i] * buf[i];
+      rms = Math.sqrt(rms / buf.length);
+      if (rms > 0.01) {                       // only sample while actually speaking
+        seg.volumes.push(rms);
+        const p = autoCorrelate(buf, ac.sampleRate);
+        if (p > 0) seg.pitches.push(p);
+      }
+    }, 130);
+  } catch (e) { /* tone stays unmeasured; scoring rescales without it */ }
+}
+function stopSegTone(seg) {
+  if (!seg) return;
+  if (seg._toneTimer) { clearInterval(seg._toneTimer); seg._toneTimer = null; }
+  // stop the recorder BEFORE the tracks so the final audio chunk gets flushed
+  if (seg._recorder) {
+    try { if (seg._recorder.state !== "inactive") seg._recorder.stop(); } catch (e) {}
+    seg._recorder = null;
+  }
+  if (seg._stream) {
+    const st = seg._stream; seg._stream = null;
+    setTimeout(() => st.getTracks().forEach(t => t.stop()), 200);
+  }
+  if (seg._ac) { try { seg._ac.close(); } catch (e) {} seg._ac = null; }
+}
+// Fundamental-frequency (pitch) detector via autocorrelation. Returns Hz or -1.
+function autoCorrelate(buf, sampleRate) {
+  const SIZE = buf.length;
+  let rms = 0;
+  for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
+  rms = Math.sqrt(rms / SIZE);
+  if (rms < 0.01) return -1;
+  let r1 = 0, r2 = SIZE - 1;
+  const thres = 0.2;
+  for (let i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < thres) { r1 = i; break; }
+  for (let i = 1; i < SIZE / 2; i++) if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
+  const b = buf.slice(r1, r2);
+  const n = b.length;
+  if (n < 8) return -1;
+  const c = new Array(n).fill(0);
+  for (let i = 0; i < n; i++) for (let j = 0; j < n - i; j++) c[i] += b[j] * b[j + i];
+  let d = 0; while (d < n - 1 && c[d] > c[d + 1]) d++;
+  let maxval = -1, maxpos = -1;
+  for (let i = d; i < n; i++) if (c[i] > maxval) { maxval = c[i]; maxpos = i; }
+  let T0 = maxpos;
+  if (T0 <= 0) return -1;
+  const x1 = c[T0 - 1] || 0, x2 = c[T0], x3 = c[T0 + 1] || 0;
+  const a = (x1 + x3 - 2 * x2) / 2, bb = (x3 - x1) / 2;
+  if (a) T0 = T0 - bb / (2 * a);
+  return sampleRate / T0;
+}
+// Synthetic pitch data for ?mock=1 testing (no real audio available).
+function seedMockTone(seg) {
+  seg.pitches = []; seg.volumes = [];
+  seg._toneTimer = setInterval(() => {
+    seg.pitches.push(135 + (Math.random() - 0.5) * 55 + Math.sin(Date.now() / 380) * 22);
+    seg.volumes.push(0.05 + Math.random() * 0.045);
+  }, 130);
+}
+
+/* ------------------------- screens ------------------------- */
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo({ top: 0 });
+}
+function goHome() { stopEverything(); renderTopbar(); renderHomeExtras(); show("scr-home"); }
+
+/* ------------------------- round state machine ------------------------- */
+let round = null;   // current round object
+let timers = [];    // active timeouts/intervals
+let audioUrls = []; // object URLs for hear-yourself-back; revoked on cleanup
+
+/* Hear yourself back — one player per spoken segment on the feedback screen */
+function renderPlayback() {
+  const wrap = document.getElementById("playbackWrap");
+  if (!round || !round.segments) { wrap.style.display = "none"; return; }
+  const parts = round.segments.filter(s => s.audioBlob && s.audioBlob.size > 2000);
+  if (!parts.length) { wrap.style.display = "none"; return; }
+  wrap.style.display = "";
+  document.getElementById("playbackBody").innerHTML = parts.map(s => {
+    const url = URL.createObjectURL(s.audioBlob);
+    audioUrls.push(url);
+    return `<div>${parts.length > 1 ? `<div class="pb-lbl">${escapeHtml(s.label || "")}</div>` : ""}<audio controls preload="metadata" src="${url}"></audio></div>`;
+  }).join("");
+}
+function later(fn, ms) { const t = setTimeout(fn, ms); timers.push(t); return t; }
+function every(fn, ms) { const t = setInterval(fn, ms); timers.push(t); return t; }
+function stopEverything() {
+  timers.forEach(t => { clearTimeout(t); clearInterval(t); });
+  timers = [];
+  if (round && round.rec) round.rec.stop();
+  if (round && round.segments) round.segments.forEach(stopSegTone);
+  round = null;
+  if (typeof sim !== "undefined" && sim) {
+    if (sim.rec) { sim.rec.stop(); sim.rec = null; }
+    if (sim._recorder) { try { if (sim._recorder.state !== "inactive") sim._recorder.stop(); } catch (e) {} sim._recorder = null; }
+    if (sim._recStream) { sim._recStream.getTracks().forEach(t => t.stop()); sim._recStream = null; }
+    sim = null;
+  }
+  aiCoachSeq++;   // cancel any in-flight coaching render
+  audioUrls.forEach(u => { try { URL.revokeObjectURL(u); } catch (e) {} });
+  audioUrls = [];
+}
+
+function startRound(modeKey) {
+  stopEverything();
+  const mode = MODES[modeKey];
+  round = {
+    modeKey, phase: "prep",
+    segments: [],          // per speaking segment: {label, seconds, transcript, words, deadAir, usedFull}
+    segIndex: 0,
+    noMic: !micAvailable || micDenied,
+    startedAt: Date.now(),
+  };
+
+  // build the challenge
+  if (modeKey === "sell") {
+    const obj = draw("objects", OBJECTS).t;
+    const who = draw("personas", PERSONAS).t;
+    round.challenge = { obj, who };
+    round.plan = [{ label: `Sell ${obj} to ${who}.`, sub: "Mention the product. Speak to who they are. Close the deal.", seconds: 60, topic: `${obj} ${who}` }];
+  } else if (modeKey === "rapid") {
+    const qs = [draw("rapid", RAPIDFIRE).t, draw("rapid", RAPIDFIRE).t, draw("rapid", RAPIDFIRE).t];
+    round.challenge = { qs };
+    round.plan = qs.map((q, i) => ({ label: q, sub: `Question ${i + 1} of 3 — answer fully, no dodging.`, seconds: 30, topic: q }));
+  } else if (modeKey === "story") {
+    const words = drawWords(3);
+    round.challenge = { words };
+    round.plan = [{ label: `Tell a story using: “${words[0]}”, “${words[1]}” and “${words[2]}”.`, sub: "One coherent story. All three words must appear.", seconds: 60, topic: words.join(" ") }];
+  } else if (modeKey === "debate") {
+    const stance = draw("stances", STANCES).t;
+    round.challenge = { stance };
+    round.plan = [
+      { label: `Argue FOR: “${stance}”`, sub: "Be convincing — even if you disagree.", seconds: 45, side: "for", topic: stance },
+      { label: `Argue AGAINST: “${stance}”`, sub: "Now demolish your own argument.", seconds: 45, side: "against", topic: stance },
+    ];
+  }
+  runPrep();
+}
+
+function runPrep() {
+  const mode = MODES[round.modeKey];
+  const step = round.plan[round.segIndex];
+  document.getElementById("prepMode").textContent = mode.emoji + " " + mode.tag;
+  document.getElementById("promptBox").textContent = step.label;
+  document.getElementById("promptSub").textContent = step.sub;
+  show("scr-prep");
+  let n = readPrepSeconds(step);
+  const el = document.getElementById("prepCount");
+  const readyBtn = document.getElementById("prepReadyBtn");
+  const hint = document.getElementById("prepHint");
+  // long reading drills: show a skip button + a "read the whole thing" hint
+  const isLong = n > prepSeconds();
+  readyBtn.style.display = isLong ? "" : "none";
+  hint.textContent = isLong ? "Read the whole thing — start when you're ready." : "Get ready to speak…";
+  if (n === 0) { el.textContent = "GO!"; later(startSpeaking, 600); return; }
+  el.textContent = n;
+  round._prepIv = every(() => {
+    n--;
+    if (n <= 0) { clearInterval(round._prepIv); el.textContent = "GO!"; later(startSpeaking, 500); }
+    else { el.textContent = n; el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; }
+  }, 1000);
+}
+function skipPrep() {
+  if (!round || round.phase !== "prep") return;
+  if (round._prepIv) clearInterval(round._prepIv);
+  document.getElementById("prepReadyBtn").style.display = "none";
+  document.getElementById("prepCount").textContent = "GO!";
+  later(startSpeaking, 250);
+}
+
+function startSpeaking() {
+  if (!round) return;
+  round.phase = "speak";
+  const mode = MODES[round.modeKey];
+  const step = round.plan[round.segIndex];
+  const seg = { label: step.label, topic: step.topic, seconds: step.seconds, transcript: "", deadAir: 0, usedFull: false, side: step.side, elapsed: 0 };
+  round.segments.push(seg);
+
+  document.getElementById("speakMode").textContent = mode.emoji + " " + mode.tag;
+  document.getElementById("promptBox2").textContent = step.label;
+  document.getElementById("speakSub").textContent = step.sub;
+  const live = document.getElementById("liveTranscript");
+  live.innerHTML = '<span style="opacity:.5">Your words appear here as you speak…</span>';
+
+  const micEl = document.getElementById("micState");
+  if (round.noMic) {
+    micEl.className = "mic-dead";
+    micEl.innerHTML = "⏱️ Timer-only mode (no mic) — speak out loud anyway!";
+    live.style.display = "none";
+  } else {
+    micEl.className = "mic-live";
+    micEl.innerHTML = '<span class="dot"></span> Listening…';
+    live.style.display = "";
+    round.rec = makeRecognizer(
+      (finalText) => {
+        seg.transcript += finalText;
+        renderLive(seg.transcript, "");
+      },
+      (interim) => renderLive(seg.transcript, interim),
+      () => { seg.deadAir++; }
+    );
+    round.rec.start();
+    if (MOCK) seedMockTone(seg); else startToneAnalysis(seg);
+  }
+  show("scr-speak");
+
+  // countdown ring
+  const total = step.seconds;
+  let left = total;
+  const ring = document.getElementById("ring");
+  const num = document.getElementById("timerNum");
+  const wrap = document.getElementById("scr-speak");
+  const C = 2 * Math.PI * 84;
+  num.textContent = left;
+  ring.style.strokeDashoffset = 0;
+  wrap.classList.remove("urgent");
+  round.tick = every(() => {
+    if (!round) return;
+    left--; seg.elapsed = total - left;
+    num.textContent = left;
+    ring.style.strokeDashoffset = C * (1 - left / total);
+    if (left <= 10) wrap.classList.add("urgent");
+    if (left <= 0) { seg.usedFull = true; endSpeaking(false); }
+  }, 1000);
+}
+
+function renderLive(finalText, interim) {
+  const live = document.getElementById("liveTranscript");
+  live.innerHTML = escapeHtml(finalText) + ' <span class="interim">' + escapeHtml(interim) + "</span>";
+  live.scrollTop = live.scrollHeight;
+}
+
+function endSpeaking(early) {
+  if (!round || round.phase !== "speak") return;
+  const seg = round.segments[round.segments.length - 1];
+  if (early) seg.elapsed = seg.elapsed || 1;
+  if (round.rec) { round.rec.stop(); round.rec = null; }
+  stopSegTone(seg);
+  clearInterval(round.tick);
+  document.getElementById("scr-speak").classList.remove("urgent");
+  round.phase = "between";
+
+  round.segIndex++;
+  if (round.segIndex < round.plan.length) {
+    // more segments: rapid-fire next question, or debate flip
+    if (round.modeKey === "debate") {
+      document.getElementById("flipSub").textContent = "Now argue AGAINST the same stance. Ready?";
+      show("scr-flip");
+      later(runPrep, 2200);
+    } else {
+      runPrep();
+    }
+  } else {
+    if (round.noMic) startSelfRate();
+    else finishRound();
+  }
+}
+
+/* ------------------------- self-rate fallback ------------------------- */
+let selfStars = 0;
+function startSelfRate() {
+  selfStars = 0;
+  document.querySelectorAll("#stars button").forEach(b => b.classList.remove("on"));
+  document.getElementById("selfrateGo").disabled = true;
+  show("scr-selfrate");
+}
+document.querySelectorAll("#stars button").forEach(b => {
+  b.addEventListener("click", () => {
+    selfStars = +b.dataset.v;
+    document.querySelectorAll("#stars button").forEach(x => x.classList.toggle("on", +x.dataset.v <= selfStars));
+    document.getElementById("selfrateGo").disabled = false;
+  });
+});
+function finishSelfRate() { finishRound(selfStars * 20); }
+
+/* ------------------------- scoring ------------------------- */
+function analyze() {
+  const segs = round.segments;
+  const fullText = segs.map(s => s.transcript).join(" ").trim();
+  const words = fullText ? fullText.split(/\s+/).filter(Boolean) : [];
+  const spokenSec = Math.max(1, segs.reduce((a, s) => a + Math.max(1, s.elapsed), 0));
+  const totalSec = segs.reduce((a, s) => a + s.seconds, 0);
+  const wpm = Math.round(words.length / (spokenSec / 60));
+  const deadAir = segs.reduce((a, s) => a + s.deadAir, 0);
+
+  // --- disfluencies: filler words + stammered word repeats ("two two two")
+  const fillers = [...fullText.matchAll(FILLER_RE)].map(m => m[0]);
+  const rep = countRepeats(words);
+  const disfluencies = fillers.length + rep.reps;
+  const dpm = +(disfluencies / (spokenSec / 60)).toFixed(1);
+  const fpm = dpm; // stored in history as the disfluency rate
+
+  // === PACE (0-20): sweet spot 110-160 wpm; dead air hurts ===
+  let pace;
+  if (wpm >= 110 && wpm <= 160) pace = 20;
+  else if (wpm >= 85 && wpm < 110) pace = 12 + Math.round((wpm - 85) / 25 * 8);
+  else if (wpm > 160 && wpm <= 190) pace = 20 - Math.round((wpm - 160) / 30 * 8);
+  else if (wpm > 190) pace = 9;
+  else pace = Math.max(2, Math.round(wpm / 85 * 12));
+  pace = Math.max(0, pace - Math.min(8, deadAir * 2));
+
+  // === CLEAN SPEECH (0-20): stricter — every filler AND stammer counts ===
+  const clean = Math.max(0, Math.round(20 - dpm * 2.4));
+
+  // === TONE & ENERGY (0-20): pitch + volume variation ===
+  const tone = toneScore(segs);
+
+  // === ON TOPIC (0-25): did you actually address the prompt, with substance ===
+  const topic = topicScore(segs, words.length);
+
+  // === STAMINA (0-15) ===
+  const stamina = Math.round(Math.min(1, spokenSec / totalSec) * 15);
+
+  // assemble; tone is skipped (and total rescaled) when audio wasn't measured
+  const comps = [
+    { key: "pace",    label: "🌊 Pace",          pts: pace,       max: 20, note: `${wpm} words/min` },
+    { key: "clean",   label: "🧹 Clean speech",  pts: clean,      max: 20, note: `${fillers.length} fillers, ${rep.reps} stumbles (${dpm}/min)` },
+    { key: "tone",    label: "🎵 Tone & energy", pts: tone.score, max: 20, note: tone.note, available: tone.score !== null },
+    { key: "topic",   label: "🎯 On topic",      pts: topic.pts,  max: 25, note: topic.note },
+    { key: "stamina", label: "🔋 Stamina",       pts: stamina,    max: 15, note: stamina >= 14 ? "Used the full time" : "Stopped early" },
+  ];
+  const avail = comps.filter(c => c.available !== false);
+  const totalMax = avail.reduce((a, c) => a + c.max, 0);
+  const rawPts = avail.reduce((a, c) => a + c.pts, 0);
+  const score = Math.round(rawPts / totalMax * 100);
+
+  return { score, comps, wpm, fpm, dpm, fillers, rep, disfluencies, tone, topic, words: words.length, fullText, spokenSec, totalSec, deadAir };
+}
+
+// count consecutive repeated words (stammering / "two two two")
+function countRepeats(words) {
+  let reps = 0; const examples = [];
+  for (let i = 1; i < words.length; i++) {
+    const a = words[i - 1].toLowerCase().replace(/[^a-z0-9]/g, "");
+    const b = words[i].toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (a && a === b && a.length <= 6) {   // short-word repeat = stumble, not intentional emphasis
+      reps++;
+      if (examples.length < 3 && !examples.includes(a)) examples.push(a);
+    }
+  }
+  return { reps, examples };
+}
+
+// vocal delivery score from pitch/volume variation
+function toneScore(segs) {
+  let pitches = [], vols = [];
+  segs.forEach(s => { if (s.pitches) pitches = pitches.concat(s.pitches); if (s.volumes) vols = vols.concat(s.volumes); });
+  pitches = pitches.filter(p => p > 70 && p < 400);   // human speech range
+  if (pitches.length < 12) return { score: null, note: "Not measured (needs mic audio)", monotone: false };
+  const pm = mean(pitches), ps = std(pitches);
+  const pitchCV = pm ? ps / pm : 0;
+  const vm = mean(vols), vs = std(vols);
+  const volCV = vm ? vs / vm : 0;
+  const pitchPts = clamp((pitchCV - 0.06) / (0.26 - 0.06), 0, 1);
+  const volPts = clamp((volCV - 0.18) / (0.6 - 0.18), 0, 1);
+  const score = Math.round((pitchPts * 0.65 + volPts * 0.35) * 20);
+  let note;
+  if (pitchCV < 0.09) note = "Monotone — vary your pitch";
+  else if (pitchCV < 0.15) note = "A little flat — add energy";
+  else if (score >= 15) note = "Dynamic, expressive delivery";
+  else note = "Some variation — push it more";
+  return { score, note, pitchCV, volCV, monotone: pitchCV < 0.09 };
+}
+
+// on-topic relevance: fraction of the prompt's content words that show up in the answer
+function topicRelevance(topicText, responseText) {
+  const keys = keywordTokens(topicText);
+  if (!keys.length) return { ratio: 1, hits: [], keys: [] };
+  const low = " " + responseText.toLowerCase() + " ";
+  const hits = keys.filter(k => {
+    const stem = k.length > 5 ? k.slice(0, k.length - 2) : k;   // zoo/zoos, institution/institution
+    return low.includes(k) || low.includes(stem);
+  });
+  return { ratio: hits.length / keys.length, hits, keys };
+}
+
+// per-segment topic score: off-topic OR underdeveloped answers get marked down hard (0-25)
+function topicScore(segs, totalWords) {
+  const scored = segs.filter(s => s.topic);
+  if (!scored.length) return { pts: Math.min(25, Math.round(totalWords / 60 * 25)), note: "Answered.", factor: 1, offTopicSegs: 0 };
+  const minWords = 18;
+  let sumFactor = 0, offTopicSegs = 0;
+  scored.forEach(s => {
+    const rel = topicRelevance(s.topic, s.transcript);
+    const w = s.transcript.trim().split(/\s+/).filter(Boolean).length;
+    const dev = clamp(w / minWords, 0, 1);                      // underdeveloped = short
+    const relFactor = rel.ratio === 0 ? 0.1 : clamp(0.45 + rel.ratio * 0.55, 0, 1);  // no overlap = off topic
+    sumFactor += relFactor * (0.45 + 0.55 * dev);
+    if (rel.ratio === 0 || w < 6) offTopicSegs++;
+  });
+  const factor = sumFactor / scored.length;
+  const pts = Math.round(25 * factor);
+  let note;
+  if (offTopicSegs === scored.length) note = "Off topic — you didn't address the prompt";
+  else if (offTopicSegs > 0) note = `Partly off topic (${offTopicSegs}/${scored.length} weak)`;
+  else if (factor > 0.8) note = "On point and well developed";
+  else if (factor > 0.55) note = "On topic — develop it further";
+  else note = "Thin — say more about the actual prompt";
+  return { pts, note, factor, offTopicSegs };
+}
+
+function keywordTokens(phrase) {
+  const stop = new Set(["the","a","an","of","to","who","that","with","and","your","this","exact","from","already","has",
+    "should","would","could","does","what","when","where","which","this","their","them","they","have","will","just",
+    "really","than","then","about","very","some","more","most","much","many","into","been","being","because","are","for",
+    "you","not","but","its","our","out","how","why","was","were","one","get","got","can","yourself"]);
+  return phrase.toLowerCase().replace(/[^a-z\s]/g, "").split(/\s+/).filter(w => w.length > 3 && !stop.has(w));
+}
+function mean(a) { return a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0; }
+function std(a) { if (!a.length) return 0; const m = mean(a); return Math.sqrt(a.reduce((x, y) => x + (y - m) * (y - m), 0) / a.length); }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+const GRADES = [[90, "S"], [75, "A"], [60, "B"], [0, "C"]];
+function gradeOf(score) { return GRADES.find(([min]) => score >= min)[1]; }
+
+const COACH = {
+  S: ["Unreal. You could sell sand in a desert.", "That was smooth, sharp and on target. Take a bow.", "Coach has nothing. That was a masterclass."],
+  A: ["Strong! A little polish and that's an S.", "Confident and clear — you're getting dangerous.", "Great round. You barely hesitated."],
+  B: ["Solid foundation. Now tighten the delivery.", "Good ideas in there — let's make them land harder.", "You're finding your voice. Keep the reps coming."],
+  C: ["Rough round — and that's exactly why you're here. Again!", "Every great speaker bombed a thousand rounds first. Go again.", "Shake it off. The next 60 seconds are a fresh start."],
+};
+
+function buildTip(a) {
+  const worst = a.comps.filter(c => c.available !== false)
+    .map(c => ({ key: c.key, frac: c.pts / c.max }))
+    .sort((x, y) => x.frac - y.frac)[0].key;
+  if (worst === "topic") {
+    if (a.topic.offTopicSegs && a.topic.note.startsWith("Off topic"))
+      return `<b>Stay on topic:</b> you barely addressed the actual prompt. Anchor your very first sentence to the exact subject, then build from there — a polished answer to the wrong question still fails.`;
+    return `<b>Develop the point:</b> ${a.topic.note}. Add a reason (“because…”) and one concrete example — depth beats fluff.`;
+  }
+  if (worst === "clean") {
+    if (a.rep.reps > a.fillers.length && a.rep.examples.length)
+      return `<b>Stammer alert:</b> you repeated words like “${a.rep.examples[0]} ${a.rep.examples[0]}” — ${a.rep.reps} stumbles total. Slow down half a step; a silent pause beats restarting a word.`;
+    if (a.fillers.length) { const top = mostCommon(a.fillers); return `<b>Filler alert:</b> you said “${top.word}” ${top.count}×. When you feel one coming, pause silently instead — silence sounds confident, fillers don't.`; }
+    return `<b>Tighten it up:</b> trim the false starts and hedges; deliberate, complete sentences read as authority.`;
+  }
+  if (worst === "tone") {
+    return `<b>Vary your delivery:</b> ${a.tone.monotone ? "you were pretty monotone" : "your pitch stayed fairly flat"}. Lift your pitch on key words and drop it to land a point — sounding convinced is half of being convincing.`;
+  }
+  if (worst === "pace") {
+    if (a.wpm < 100) return `<b>Pace:</b> ${a.wpm} words/min is on the slow side (sweet spot: 110–160). Don't hunt for perfect words — say the good-enough word and keep rolling.`;
+    if (a.wpm > 165) return `<b>Pace:</b> ${a.wpm} words/min is a sprint. Breathe at the end of each sentence — speed reads as nerves, pauses read as power.`;
+    return `<b>Flow:</b> there were some long silent gaps. Bridge them with a structure: “The first thing… the second thing… and here's the kicker…”`;
+  }
+  return `<b>Stamina:</b> you stopped early. Even when you feel done, add one more example or a closing line — finishing strong is a skill of its own.`;
+}
+function mostCommon(arr) {
+  const c = {};
+  arr.forEach(w => { const k = w.toLowerCase(); c[k] = (c[k] || 0) + 1; });
+  const [word, count] = Object.entries(c).sort((a, b) => b[1] - a[1])[0];
+  return { word, count };
+}
+
+/* ------------------------- finish & feedback ------------------------- */
+let sessionFullRounds = 0;
+
+function finishRound(selfScore) {
+  const mode = MODES[round.modeKey];
+  const isSelf = selfScore !== undefined;
+  const a = isSelf
+    ? { score: selfScore, wpm: null, fpm: null, fillers: [], fullText: "" }
+    : analyze();
+  const score = a.score;
+  const grade = gradeOf(score);
+
+  // --- progression updates
+  const prevLevel = levelInfo(save.xp).lvl;
+  save.xp += score;
+  let dailyBonus = 0;
+  if (round.modeKey === "daily") { dailyBonus = Math.round(score / 2); save.xp += dailyBonus; }
+  save.rounds++;
+  if (!MODES[round.modeKey].hidden) save.modesPlayed[round.modeKey] = true;
+  if (round.modeKey === "drill" && round.drill) {
+    save.lessonsDone = save.lessonsDone || [];
+    if (!save.lessonsDone.includes(round.drill.lesson.id)) save.lessonsDone.push(round.drill.lesson.id);
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  if (save.lastPlayDay !== today) {
+    const yesterday = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+    save.streak = save.lastPlayDay === yesterday ? save.streak + 1 : 1;
+    save.lastPlayDay = today;
+  }
+  if (round.modeKey === "daily") save.dailyDone = today;
+  // compare against past rounds of the same mode BEFORE recording this one
+  const priorSame = save.history.filter(r => r.m === round.modeKey);
+  const priorAvg = priorSame.length ? priorSame.reduce((x, r) => x + r.s, 0) / priorSame.length : null;
+  const priorBest = priorSame.length ? Math.max(...priorSame.map(r => r.s)) : null;
+
+  save.history.push({ d: today, m: round.modeKey, s: score, wpm: a.wpm, fpm: a.fpm });
+  if (save.history.length > 50) save.history = save.history.slice(-50);
+  // freeze a "day one" baseline after the first 3 mic rounds — it never shifts, so
+  // the Progress screen can always show how far they've come from the very start
+  if (!save.baseline) {
+    const mic3 = save.history.filter(r => r.wpm != null);
+    if (mic3.length >= 3) {
+      const f3 = mic3.slice(0, 3);
+      save.baseline = {
+        s: Math.round(f3.reduce((x, r) => x + r.s, 0) / 3),
+        wpm: Math.round(f3.reduce((x, r) => x + r.wpm, 0) / 3),
+        fpm: +(f3.reduce((x, r) => x + (r.fpm || 0), 0) / 3).toFixed(1),
+        d: f3[0].d,
+      };
+    }
+  }
+  if (!isSelf && round.segments.every(s => s.usedFull)) sessionFullRounds++;
+
+  // --- badges
+  const earned = [];
+  const give = (id) => { if (!save.badges[id]) { save.badges[id] = today; earned.push(BADGES.find(b => b.id === id)); } };
+  give("first");
+  if (grade === "S") give("sgrade");
+  if (!isSelf && a.disfluencies === 0 && a.spokenSec >= 30 && a.words > 20) give("zerofill");
+  if (sessionFullRounds >= 3) give("marathon");
+  if (round.modeKey === "debate" && score >= 75) give("devil");
+  if (Object.keys(save.modesPlayed).length === 4) give("allmodes");
+  if (save.streak >= 7) give("streak7");
+  if (save.rounds >= 100) give("centurion");
+  persist();
+
+  const newLevel = levelInfo(save.xp).lvl;
+
+  // --- render feedback
+  document.getElementById("fbMode").textContent = mode.emoji + " " + mode.tag;
+  document.getElementById("gradeBig").textContent = grade;
+  document.getElementById("scoreLine").textContent = `${score} / 100`;
+  const sd = document.getElementById("scoreDelta");
+  if (priorBest !== null && score > priorBest) {
+    sd.innerHTML = `<span style="color:var(--good)">🏆 New personal best in ${mode.name}!</span>`;
+  } else if (priorAvg !== null) {
+    const dv = Math.round(score - priorAvg);
+    sd.innerHTML = dv > 0 ? `<span style="color:var(--good)">▲ ${dv} above your ${mode.name} average</span>`
+      : dv < 0 ? `<span style="color:var(--bad)">▼ ${-dv} below your ${mode.name} average</span>`
+      : `<span style="color:var(--muted)">right on your ${mode.name} average</span>`;
+  } else {
+    sd.innerHTML = `<span style="color:var(--muted)">first ${mode.name} round — this is your baseline</span>`;
+  }
+  const coachPool = COACH[grade];
+  let coach = coachPool[Math.floor(Math.random() * coachPool.length)];
+  if (newLevel > prevLevel) coach += ` 🎉 LEVEL UP — you're now level ${newLevel}!` +
+    (newLevel === 5 ? " Hard prompts unlocked, prep time cut to 3s." : newLevel === 10 ? " EXPERT prompts unlocked — zero prep time. Good luck." : "");
+  document.getElementById("coachSay").textContent = coach;
+
+  const bars = document.getElementById("fbBars");
+  if (isSelf) {
+    bars.innerHTML = `<div style="color:var(--muted);font-size:14px;">Self-rated round — enable the microphone for a full breakdown (pace, filler words, tone, on-topic check).</div>`;
+    document.getElementById("tipBox").style.display = "none";
+    document.getElementById("fbTranscript").innerHTML = "";
+  } else {
+    bars.innerHTML = a.comps.map(c => barRow(c.label, c.pts, c.max, c.note, c.available)).join("");
+    later(() => document.querySelectorAll(".bar-fill").forEach(el => el.style.width = el.dataset.w), 60);
+    document.getElementById("tipBox").style.display = "";
+    document.getElementById("tipBox").innerHTML = "💡 " + buildTip(a);
+    document.getElementById("fbTranscript").innerHTML = a.fullText
+      ? "<b style='color:var(--text)'>What you said</b> (fillers highlighted):<br>" +
+        escapeHtml(a.fullText).replace(FILLER_RE, m => `<mark>${m}</mark>`)
+      : "<i>No speech detected — was the mic on and close enough?</i>";
+  }
+  document.getElementById("xpGain").textContent = `+${score} XP` + (dailyBonus ? ` (+${dailyBonus} daily bonus 🎉)` : "");
+  document.getElementById("newBadges").innerHTML = earned.map(b => `<div class="badge-pop">${b.bi} Badge unlocked: ${b.bn}</div>`).join("");
+
+  // --- AI coaching prompt: only when there's a real transcript to coach
+  lastCoachPrompt = (!isSelf && a.fullText.trim()) ? buildCoachPrompt(a) : null;
+  document.getElementById("coachPanel").style.display = "none";
+  document.getElementById("coachText").classList.remove("on");
+  document.getElementById("coachToggle").textContent = "Show prompt";
+  const hasKey = aiAvailable();
+  if (lastCoachPrompt && hasKey) {
+    // live AI coach takes over; copy-paste stays reachable inside the panel
+    document.getElementById("coachWrap").style.display = "none";
+    fetchAiCoaching();
+  } else {
+    aiCoachSeq++;   // cancel any stale in-flight request's render
+    document.getElementById("aiCoachPanel").style.display = "none";
+    document.getElementById("coachWrap").style.display = lastCoachPrompt ? "" : "none";
+  }
+
+  // hear yourself back — recorder finalizes its blob a beat after the round ends
+  document.getElementById("playbackWrap").style.display = "none";
+  if (!isSelf) later(renderPlayback, 500);
+
+  renderTopbar();
+  show("scr-feedback");
+  if (grade === "S" || newLevel > prevLevel) confetti();
+  round.phase = "done";
+}
+function barRow(label, val, max, note, available) {
+  if (available === false) {
+    return `<div class="bar-row"><div class="lbl"><span>${label}</span><span>${escapeHtml(note || "")}</span></div>
+      <div class="bar-track"><div class="bar-fill" data-w="0%" style="opacity:.3"></div></div></div>`;
+  }
+  return `<div class="bar-row"><div class="lbl"><span>${label} — ${val}/${max}</span><span>${escapeHtml(note || "")}</span></div>
+    <div class="bar-track"><div class="bar-fill" data-w="${Math.round(val / max * 100)}%"></div></div></div>`;
+}
+function playAgain() {
+  if (round && round.modeKey === "drill" && round.drill) {
+    const d = round.drill;
+    startDrill(d.trackKey, d.lesson);
+    return;
+  }
+  if (round && round.modeKey === "real" && round.real) {
+    const r = round.real;           // grab before showPrep clears the round
+    realType = r.type;
+    showPrep();
+    document.getElementById("realDesc").value = r.desc;
+    buildRealChallenge();           // a NEW hard moment for the same situation
+    return;
+  }
+  if (round && round.modeKey === "weak" && round.weak) {
+    const w = round.weak;
+    startWeakRound(w.ch, w.fix, w.srcName);   // same drill, another rep
+    return;
+  }
+  if (round && round.modeKey === "daily") { startDaily(); return; }
+  const k = round && MODES[round.modeKey] && !MODES[round.modeKey].hidden ? round.modeKey : "sell";
+  startRound(k);
+}
+
+/* ------------------------- AI coaching (copy to clipboard) ------------------------- */
+async function copyCoachPrompt() {
+  if (!lastCoachPrompt) return;
+  const panel = document.getElementById("coachPanel");
+  const status = document.getElementById("coachStatus");
+  const text = document.getElementById("coachText");
+  text.value = lastCoachPrompt;
+  panel.style.display = "block";
+  try {
+    await navigator.clipboard.writeText(lastCoachPrompt);
+    status.textContent = "✅ Prompt copied to your clipboard!";
+    status.style.color = "var(--good)";
+  } catch (e) {
+    // clipboard blocked (no permission / insecure context) — reveal it for manual copy
+    status.textContent = "👇 Couldn't auto-copy — select all in the box below and copy it (Ctrl+A, Ctrl+C):";
+    status.style.color = "var(--warn)";
+    text.classList.add("on");
+    document.getElementById("coachToggle").textContent = "Hide prompt";
+    text.focus(); text.select();
+  }
+  panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+function toggleCoachPrompt() {
+  const text = document.getElementById("coachText");
+  const on = text.classList.toggle("on");
+  document.getElementById("coachToggle").textContent = on ? "Hide prompt" : "Show prompt";
+  if (on) { text.focus(); text.select(); }
+}
+
+/* ------------------------- stats screen ------------------------- */
+function showStats() {
+  stopEverything();
+  const h = save.history;
+  document.getElementById("stRounds").textContent = save.rounds;
+  document.getElementById("stAvg").textContent = h.length ? Math.round(h.reduce((a, r) => a + r.s, 0) / h.length) : "–";
+  const wpmRs = h.filter(r => r.wpm);
+  document.getElementById("stWpm").textContent = wpmRs.length ? Math.round(wpmRs.reduce((a, r) => a + r.wpm, 0) / wpmRs.length) : "–";
+  const fpmRs = h.filter(r => r.fpm != null);
+  document.getElementById("stFill").textContent = fpmRs.length ? (fpmRs.reduce((a, r) => a + r.fpm, 0) / fpmRs.length).toFixed(1) : "–";
+
+  // then vs now — frozen day-one baseline vs the last 3 rounds
+  const ib = document.getElementById("improveBody");
+  const micNow = h.filter(r => r.wpm != null).slice(-3);
+  const rows = [];
+  if (save.baseline && micNow.length >= 1) {
+    const nowS = Math.round(micNow.reduce((x, r) => x + r.s, 0) / micNow.length);
+    const nowW = Math.round(micNow.reduce((x, r) => x + r.wpm, 0) / micNow.length);
+    const nowF = +(micNow.reduce((x, r) => x + (r.fpm || 0), 0) / micNow.length).toFixed(1);
+    const cmp = (label, a, b, higherBetter, suffix = "") => {
+      const diff = +(b - a).toFixed(1);
+      const good = higherBetter ? diff > 0 : diff < 0;
+      const col = diff === 0 ? "var(--muted)" : good ? "var(--good)" : "var(--bad)";
+      const arrow = diff === 0 ? "＝" : diff > 0 ? "▲" : "▼";
+      rows.push(`<div class="best-row"><span>${label}</span><b>${a}${suffix} → ${b}${suffix} <span style="color:${col}">${arrow}</span></b></div>`);
+    };
+    cmp("Game score", save.baseline.s, nowS, true);
+    cmp("Stumbles / min", save.baseline.fpm, nowF, false);
+    rows.push(`<div class="best-row"><span>Speaking pace <span style="color:var(--muted);font-size:12px;">(target 110–160)</span></span><b>${save.baseline.wpm} → ${nowW} wpm</b></div>`);
+  }
+  if (save.baselineCoach && (save.coachLog || []).length >= 1) {
+    const cl = save.coachLog;
+    const now3 = cl.slice(-3);
+    const nowC = +(now3.reduce((x, e) => x + e.score, 0) / now3.length).toFixed(1);
+    const diff = +(nowC - save.baselineCoach.score).toFixed(1);
+    const col = diff === 0 ? "var(--muted)" : diff > 0 ? "var(--good)" : "var(--bad)";
+    rows.push(`<div class="best-row"><span>Coach's score <span style="color:var(--muted);font-size:12px;">(strict, /10)</span></span><b>${save.baselineCoach.score} → ${nowC} <span style="color:${col}">${diff === 0 ? "＝" : diff > 0 ? "▲" : "▼"}</span></b></div>`);
+  }
+  const lastFix = (save.coachLog || []).slice(-1)[0];
+  let ibHtml = rows.length
+    ? `<div style="color:var(--muted);font-size:13px;margin-bottom:8px;">Your first ${save.baseline ? "3 rounds (" + save.baseline.d + ")" : "rounds"} vs your last 3.</div><div id="bestGridLike" style="display:grid;gap:8px;">${rows.join("")}</div>`
+    : `<div style="color:var(--muted);font-size:14px;">Play at least 3 mic rounds — your first ones get frozen as a baseline, and this card shows exactly how far you've come since.</div>`;
+  if (lastFix && lastFix.fix) {
+    ibHtml += `<div style="margin-top:12px;padding:10px 14px;border-left:4px solid var(--accent-2);background:rgba(0,212,255,.07);border-radius:0 10px 10px 0;font-size:14px;"><b style="color:var(--accent-2)">🎯 Coach's current focus:</b> ${escapeHtml(lastFix.fix)}</div>`;
+  }
+  ib.innerHTML = ibHtml;
+
+  // sparkline
+  const sp = document.getElementById("sparkline");
+  if (h.length >= 2) {
+    const W = 640, H = 70, pad = 4;
+    const pts = h.map((r, i) => {
+      const x = pad + i / (h.length - 1) * (W - pad * 2);
+      const y = H - pad - (r.s / 100) * (H - pad * 2);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    sp.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none">
+      <polyline points="${pts.join(" ")}" fill="none" stroke="url(#g2)" stroke-width="2.5" stroke-linejoin="round"/>
+      <defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#00d4ff"/></linearGradient></defs>
+    </svg>`;
+  } else {
+    sp.innerHTML = `<div style="color:var(--muted);font-size:14px;">Play a couple of rounds and your improvement curve appears here.</div>`;
+  }
+
+  // best per mode
+  const bg = document.getElementById("bestGrid");
+  bg.innerHTML = Object.keys(MODES).filter(k => !MODES[k].hidden).map(k => {
+    const best = h.filter(r => r.m === k).reduce((m, r) => Math.max(m, r.s), 0);
+    return `<div class="best-row"><span>${MODES[k].emoji} ${MODES[k].name}</span><b>${best ? best + " (" + gradeOf(best) + ")" : "not played yet"}</b></div>`;
+  }).join("");
+
+  // badges
+  document.getElementById("badgeGrid").innerHTML = BADGES.map(b =>
+    `<div class="badge ${save.badges[b.id] ? "" : "locked"}"><div class="bi">${b.bi}</div><div class="bn">${b.bn}</div><div class="bd">${b.bd}</div></div>`
+  ).join("");
+
+  show("scr-stats");
+}
+
+/* ------------------------- topbar / home render ------------------------- */
+function renderTopbar() {
+  const li = levelInfo(save.xp);
+  document.getElementById("levelNum").textContent = li.lvl;
+  document.getElementById("xpNum").textContent = save.xp;
+  document.getElementById("streakNum").textContent = save.streak;
+  document.getElementById("xpbar").style.width = Math.round(li.into / li.need * 100) + "%";
+}
+function renderModes() {
+  const tier = unlockTier();
+  document.getElementById("modes").innerHTML = Object.entries(MODES).filter(([, m]) => !m.hidden).map(([k, m]) =>
+    `<button class="mode-card" onclick="startRound('${k}')">
+      <span class="emoji">${m.emoji}</span>
+      <h3>${m.name}</h3>
+      <p>${m.desc}</p>
+      <div class="meta">${m.meta} · ${tier === 3 ? "EXPERT POOL" : tier === 2 ? "HARD POOL" : "unlocks harder prompts at lvl 5"}</div>
+    </button>`).join("");
+}
+
+/* ------------------------- confetti ------------------------- */
+function confetti() {
+  const cv = document.getElementById("confetti");
+  const ctx = cv.getContext("2d");
+  cv.width = innerWidth; cv.height = innerHeight;
+  const colors = ["#7c5cff", "#00d4ff", "#2dd4a7", "#ffb020", "#ff5470", "#ffffff"];
+  const parts = Array.from({ length: 140 }, () => ({
+    x: Math.random() * cv.width, y: -20 - Math.random() * cv.height * .4,
+    vx: (Math.random() - .5) * 2.4, vy: 2.2 + Math.random() * 3.4,
+    s: 5 + Math.random() * 6, r: Math.random() * Math.PI, vr: (Math.random() - .5) * .25,
+    c: colors[Math.floor(Math.random() * colors.length)],
+  }));
+  const t0 = Date.now();
+  (function frame() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    parts.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+      ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * .6);
+      ctx.restore();
+    });
+    if (Date.now() - t0 < 2600) requestAnimationFrame(frame);
+    else ctx.clearRect(0, 0, cv.width, cv.height);
+  })();
+}
+
+/* ------------------------- keyboard ------------------------- */
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+  if (e.code === "Space") {
+    if (round && round.phase === "speak") { e.preventDefault(); endSpeaking(true); }
+  } else if (e.code === "Enter") {
+    if (round && round.phase === "done") { e.preventDefault(); playAgain(); }
+  }
+});
+
+/* ------------------------- misc ------------------------- */
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* ------------------------- boot ------------------------- */
+if (!micAvailable) {
+  showMicBanner("🎤 Your browser doesn't support speech recognition — rounds run with a timer + self-rating instead. For full speech feedback (pace, filler words, task check), open the game in <b>Chrome</b> or <b>Edge</b>.");
+}
+if (MOCK) showMicBanner("🧪 <b>Mock mode</b> — a fake transcript is fed in for testing. Remove <code>?mock=1</code> from the URL for real mic input.");
+renderTopbar();
+renderModes();
+renderHomeExtras();
+detectProxy();   // published-on-Vercel? free AI coaching via /api/claude
+</script>
+</body>
+</html>
