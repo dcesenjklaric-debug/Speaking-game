@@ -22,13 +22,13 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; }
   body {
-    background: var(--bg);
+    /* NOTE: no background-image here on purpose. Page-height gradients scroll
+       with the content while the #bgfx layer is fixed, and the mismatch shows up
+       as a colour seam halfway down. All background art lives in #bgfx. */
+    background: #070a13;
     color: var(--text);
     font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
-    background-image:
-      radial-gradient(900px 500px at 85% -10%, rgba(124,92,255,.14), transparent 60%),
-      radial-gradient(700px 400px at -10% 110%, rgba(0,212,255,.10), transparent 60%);
   }
   #app { max-width: 760px; margin: 0 auto; padding: 20px 16px 48px; min-height: 100%; }
 
@@ -382,11 +382,27 @@
     #gradeBig { font-size: 72px; }
   }
 
-  /* ================== visual polish: aurora, stars, glass ================== */
-  #bgfx { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+  /* ================== deep-space background (fixed = seamless when scrolling) ==========
+     Everything here is position:fixed inside a full-viewport layer, so the scene is
+     pixel-identical at every scroll position — no gradient seam halfway down. */
+  #bgfx {
+    position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
+    background:
+      radial-gradient(1200px 780px at 78% -10%, rgba(124,92,255,.20), transparent 62%),
+      radial-gradient(1000px 700px at -10% 106%, rgba(0,212,255,.14), transparent 62%),
+      radial-gradient(820px 560px at 18% 22%, rgba(255,92,225,.09), transparent 68%),
+      radial-gradient(900px 620px at 95% 72%, rgba(18,184,166,.09), transparent 66%),
+      linear-gradient(178deg, #0a0d1e 0%, #0b0f22 38%, #080b16 72%, #06080f 100%);
+  }
+  /* faint milky-way band across the scene */
+  #bgfx .band {
+    position: absolute; left: -25%; right: -25%; top: 22%; height: 46%;
+    background: radial-gradient(58% 50% at 50% 50%, rgba(164,184,255,.085), transparent 72%);
+    transform: rotate(-17deg); filter: blur(22px);
+  }
   #bgfx .blob {
     position: absolute; border-radius: 50%;
-    filter: blur(90px); will-change: transform;
+    filter: blur(95px); will-change: transform;
   }
   #bgfx .b1 {
     width: 620px; height: 620px; top: -200px; left: -140px; opacity: .5;
@@ -394,37 +410,89 @@
     animation: drift1 26s ease-in-out infinite alternate;
   }
   #bgfx .b2 {
-    width: 680px; height: 680px; bottom: -240px; right: -180px; opacity: .38;
+    width: 680px; height: 680px; bottom: -240px; right: -180px; opacity: .4;
     background: radial-gradient(circle at 60% 40%, #00d4ff, transparent 68%);
     animation: drift2 34s ease-in-out infinite alternate;
   }
   #bgfx .b3 {
-    width: 460px; height: 460px; top: 38%; left: 58%; opacity: .22;
+    width: 460px; height: 460px; top: 38%; left: 58%; opacity: .24;
     background: radial-gradient(circle at 50% 50%, #ff5ce1, transparent 68%);
     animation: drift3 40s ease-in-out infinite alternate;
+  }
+  #bgfx .b4 {
+    width: 560px; height: 560px; bottom: -160px; left: 4%; opacity: .34;
+    background: radial-gradient(circle at 45% 55%, #4c3bcf, transparent 68%);
+    animation: drift4 46s ease-in-out infinite alternate;
+  }
+  #bgfx .b5 {
+    width: 420px; height: 420px; top: -120px; right: 8%; opacity: .26;
+    background: radial-gradient(circle at 50% 50%, #12b8a6, transparent 68%);
+    animation: drift5 38s ease-in-out infinite alternate;
+  }
+  #bgfx .b6 {
+    width: 380px; height: 380px; top: 58%; left: -110px; opacity: .2;
+    background: radial-gradient(circle at 50% 50%, #ff6b9d, transparent 68%);
+    animation: drift6 52s ease-in-out infinite alternate;
   }
   @keyframes drift1 { to { transform: translate(150px, 100px) scale(1.15); } }
   @keyframes drift2 { to { transform: translate(-130px, -90px) scale(1.1); } }
   @keyframes drift3 { to { transform: translate(-170px, 70px) scale(.88); } }
+  @keyframes drift4 { to { transform: translate(120px, -110px) scale(1.12); } }
+  @keyframes drift5 { to { transform: translate(-90px, 130px) scale(.9); } }
+  @keyframes drift6 { to { transform: translate(160px, -80px) scale(1.18); } }
 
-  #bgfx .stars, #bgfx .stars2 {
-    position: absolute; inset: -60% -20% -20% -20%;
-    background-image:
-      radial-gradient(1.6px 1.6px at 22% 31%, rgba(255,255,255,.8), transparent 100%),
-      radial-gradient(1.2px 1.2px at 68% 12%, rgba(255,255,255,.6), transparent 100%),
-      radial-gradient(1.4px 1.4px at 44% 68%, rgba(200,220,255,.7), transparent 100%),
-      radial-gradient(1px 1px at 85% 52%, rgba(255,255,255,.5), transparent 100%),
-      radial-gradient(1.3px 1.3px at 9% 84%, rgba(180,240,255,.6), transparent 100%),
-      radial-gradient(1px 1px at 57% 43%, rgba(255,255,255,.45), transparent 100%);
-    background-repeat: repeat; background-size: 560px 560px;
-    opacity: .45; animation: starDrift 160s linear infinite;
+  /* --- starfield: three parallax layers --- */
+  #bgfx .stars, #bgfx .stars2, #bgfx .stars3 {
+    position: absolute; inset: -60% -25% -25% -25%; will-change: transform;
   }
+  /* layer 1 — dense dust */
+  #bgfx .stars {
+    background-image:
+      radial-gradient(1.5px 1.5px at 22% 31%, rgba(255,255,255,.95), transparent 100%),
+      radial-gradient(1.2px 1.2px at 68% 12%, rgba(255,255,255,.8), transparent 100%),
+      radial-gradient(1.4px 1.4px at 44% 68%, rgba(214,230,255,.85), transparent 100%),
+      radial-gradient(1px 1px at 85% 52%, rgba(255,255,255,.7), transparent 100%),
+      radial-gradient(1.3px 1.3px at 9% 84%, rgba(196,240,255,.8), transparent 100%),
+      radial-gradient(1px 1px at 57% 43%, rgba(255,255,255,.6), transparent 100%),
+      radial-gradient(1.1px 1.1px at 33% 7%, rgba(255,255,255,.75), transparent 100%),
+      radial-gradient(1.4px 1.4px at 77% 88%, rgba(255,255,255,.85), transparent 100%),
+      radial-gradient(1px 1px at 4% 46%, rgba(226,236,255,.65), transparent 100%),
+      radial-gradient(1.2px 1.2px at 92% 27%, rgba(255,255,255,.7), transparent 100%),
+      radial-gradient(1px 1px at 63% 74%, rgba(255,255,255,.6), transparent 100%),
+      radial-gradient(1.3px 1.3px at 15% 62%, rgba(255,255,255,.75), transparent 100%);
+    background-repeat: repeat; background-size: 480px 480px;
+    opacity: .6; animation: starDrift 150s linear infinite;
+  }
+  /* layer 2 — mid, slow counter-drift, gentle twinkle */
   #bgfx .stars2 {
-    background-size: 780px 780px; opacity: .3;
-    animation: starDrift 220s linear infinite reverse, twinkle 7s ease-in-out infinite alternate;
+    background-image:
+      radial-gradient(1.8px 1.8px at 12% 22%, rgba(255,255,255,.95), transparent 100%),
+      radial-gradient(1.6px 1.6px at 72% 38%, rgba(214,232,255,.85), transparent 100%),
+      radial-gradient(2px 2px at 38% 82%, rgba(255,255,255,.9), transparent 100%),
+      radial-gradient(1.5px 1.5px at 88% 66%, rgba(255,236,214,.8), transparent 100%),
+      radial-gradient(1.7px 1.7px at 52% 14%, rgba(255,255,255,.85), transparent 100%),
+      radial-gradient(1.5px 1.5px at 26% 54%, rgba(196,236,255,.75), transparent 100%),
+      radial-gradient(1.9px 1.9px at 66% 92%, rgba(255,255,255,.8), transparent 100%);
+    background-repeat: repeat; background-size: 720px 720px;
+    opacity: .5; animation: starDrift 240s linear infinite reverse, twinkle 8s ease-in-out infinite alternate;
+  }
+  /* layer 3 — a few bright foreground stars with a soft halo */
+  #bgfx .stars3 {
+    background-image:
+      radial-gradient(2.6px 2.6px at 18% 42%, #fff, transparent 100%),
+      radial-gradient(9px 9px at 18% 42%, rgba(190,210,255,.30), transparent 70%),
+      radial-gradient(2.4px 2.4px at 81% 18%, #fff, transparent 100%),
+      radial-gradient(8px 8px at 81% 18%, rgba(255,210,235,.26), transparent 70%),
+      radial-gradient(2.8px 2.8px at 47% 77%, #fff, transparent 100%),
+      radial-gradient(10px 10px at 47% 77%, rgba(190,255,245,.24), transparent 70%),
+      radial-gradient(2.3px 2.3px at 68% 56%, #fff, transparent 100%),
+      radial-gradient(8px 8px at 68% 56%, rgba(210,220,255,.22), transparent 70%);
+    background-repeat: repeat; background-size: 1000px 1000px;
+    opacity: .85; animation: starDrift 340s linear infinite, twinkleBright 5.5s ease-in-out infinite alternate;
   }
   @keyframes starDrift { to { transform: translate(360px, 260px); } }
-  @keyframes twinkle { from { opacity: .12; } to { opacity: .4; } }
+  @keyframes twinkle { from { opacity: .22; } to { opacity: .58; } }
+  @keyframes twinkleBright { from { opacity: .55; } to { opacity: 1; } }
 
   /* glass panels — let the aurora glow through */
   .card, .mode-card, .lesson-row, #liveTranscript, .stat-tile, #simLive {
@@ -466,17 +534,22 @@
   #prepCount { filter: drop-shadow(0 0 24px rgba(0,212,255,.35)); }
 
   @media (prefers-reduced-motion: reduce) {
-    #bgfx .blob, #bgfx .stars, #bgfx .stars2, .hero h1 em { animation: none; }
+    #bgfx .blob, #bgfx .stars, #bgfx .stars2, #bgfx .stars3, .hero h1 em { animation: none; }
   }
 </style>
 </head>
 <body>
 <div id="bgfx" aria-hidden="true">
+  <div class="band"></div>
   <div class="blob b1"></div>
   <div class="blob b2"></div>
   <div class="blob b3"></div>
+  <div class="blob b4"></div>
+  <div class="blob b5"></div>
+  <div class="blob b6"></div>
   <div class="stars"></div>
   <div class="stars2"></div>
+  <div class="stars3"></div>
 </div>
 <canvas id="confetti"></canvas>
 <div id="app">
