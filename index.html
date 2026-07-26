@@ -259,6 +259,14 @@
   .bubble.them { background: var(--panel-2); border: 1px solid var(--line); align-self: flex-start; border-bottom-left-radius: 4px; }
   .bubble.me { background: linear-gradient(135deg, rgba(124,92,255,.85), rgba(0,212,255,.7)); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
   .bubble.sys { background: none; color: var(--muted); font-size: 13px; align-self: center; text-align: center; }
+  /* simulator goal banner */
+  #simGoal {
+    margin: 10px auto 4px; max-width: 520px; text-align: center;
+    padding: 9px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 700;
+    background: rgba(124,92,255,.12); border: 1px solid rgba(124,92,255,.4); color: var(--text);
+  }
+  #simGoal .g-sub { color: var(--muted); font-weight: 600; }
+
   /* interest meter */
   #simMeter { margin-top: 14px; text-align: left; }
   .mtr-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; font-weight: 700; letter-spacing: .3px; margin-bottom: 6px; }
@@ -553,6 +561,7 @@
   <section id="scr-sim" class="screen">
     <div class="modeTag" id="simTag" style="text-align:center;"></div>
     <h2 style="text-align:center;margin-top:6px;font-size:20px;" id="simScene"></h2>
+    <div id="simGoal"></div>
     <div id="simMeter" style="display:none;">
       <div class="mtr-top"><span id="mtrLabel"></span><span id="mtrVal"></span></div>
       <div class="mtr-track"><div id="mtrFill" class="mtr-fill"></div></div>
@@ -1838,11 +1847,17 @@ function startWeakRound(ch, fix, srcName) {
 /* ------------------------- SIMULATOR ------------------------- */
 let sim = null;
 
+// The score the player is visibly aiming for, and the floor the meter snaps to
+// when the character actually offers (so the bar can never contradict the win).
+const WIN_AT = 75;
+const WIN_SNAP = 85;
+
 // Per-track reskin of the live interest meter + win/lose framing.
 const METER_SKINS = {
   everyday: {
     emoji: "🤝", label: "Connection",
     goal: "genuinely enjoying talking to you and warming up as a new friend",
+    goalLine: "🎯 Goal: get them to want to stay in touch",
     winMsg: "🤝 They want to stay in touch!",
     give: "warmly suggests swapping numbers so you two can hang out again",
     leaveMsg: "🚪 They drifted off — the moment's gone.",
@@ -1851,6 +1866,7 @@ const METER_SKINS = {
   dating: {
     emoji: "💗", label: "Interest",
     goal: "attracted to you and genuinely enjoying the spark",
+    goalLine: "🎯 Goal: get their number or a real date",
     winMsg: "💗 You got the number!",
     give: "gives you their number and suggests meeting up again",
     leaveMsg: "🚪 They made an excuse and left.",
@@ -1859,6 +1875,7 @@ const METER_SKINS = {
   business: {
     emoji: "📈", label: "Wants to work with you",
     goal: "impressed by you and interested in working together",
+    goalLine: "🎯 Goal: land a real follow-up meeting",
     winMsg: "📈 They're sold — real meeting booked!",
     give: "proposes a concrete next meeting and shares their contact",
     leaveMsg: "🚪 They politely wrapped up and moved on.",
@@ -1885,9 +1902,14 @@ function updateMeter(animate) {
   val.style.color = meterColor(v);
 }
 
-function renderMeterDelta(delta) {
+function renderMeterDelta(delta, kind) {
   const note = document.getElementById("mtrNote");
   const skin = METER_SKINS[sim.trackKey];
+  if (kind === "win") {
+    note.className = "mtr-note show up";
+    note.textContent = "★ Goal reached!";
+    return;
+  }
   if (delta > 0) {
     note.className = "mtr-note show up";
     note.textContent = "▲ " + skin.upLabel + "  (+" + delta + ")";
@@ -1917,6 +1939,8 @@ function startSim() {
   document.getElementById("simCoachOut").style.display = "none";
   document.getElementById("simLive").style.display = "none";
   const skin = METER_SKINS[sim.trackKey];
+  document.getElementById("simGoal").innerHTML =
+    skin.goalLine + ' <span class="g-sub">— reach ' + WIN_AT + '/100</span>';
   document.getElementById("simMeter").style.display = "";
   document.getElementById("mtrLabel").textContent = skin.emoji + " " + skin.label;
   document.getElementById("mtrNote").className = "mtr-note";
@@ -1966,7 +1990,8 @@ DELTA calibration — you MUST move the meter every turn. NEVER output 0 for a l
 - -10 to -15 — awful: rude, creepy, pushy.
 Small talk should feel like it's GOING somewhere — a decent conversation climbs steadily, a bad one bleeds out.
 EVENT rules:
-- "give" when your interest is high (75+) and it feels earned over the conversation. When you use "give", your spoken line naturally ${skin.give}, then signals you genuinely have to head off now (somewhere to be) — a natural, happy exit, not an abrupt one.
+- "give" once your interest is ${WIN_AT}+ and at least 3 exchanges have happened. Do NOT stall past that — when you're genuinely won over, act on it within a turn or two instead of dragging the conversation on forever. This is the player's goal and it must be reachable. When you use "give", your spoken line naturally ${skin.give}, then signals you genuinely have to head off now (somewhere to be) — a natural, happy exit, not an abrupt one.
+- CRITICAL: if your spoken line offers your number / a date / a next meeting in ANY form, you MUST set EVENT: give on that same turn. Never offer in words while reporting EVENT: none — the two must always agree.
 - "leave" when your interest has hit rock bottom or they've been rude/creepy — your spoken line makes a graceful but real exit.
 - Otherwise "none".
 Never let the META block or its numbers appear in your spoken words.`;
@@ -1996,11 +2021,16 @@ function parseSimMeta(raw) {
   const meta = idx >= 0 ? raw.slice(idx) : "";
   const dm = meta.match(/DELTA:\s*([+-]?\d{1,2})/i);   // accept +5, -5, or 5
   const em = meta.match(/EVENT:\s*(none|give|leave)/i);
-  // if the model omitted the number entirely, nudge slightly up rather than
-  // freezing the meter — an average reply is supposed to move the needle.
-  let delta = dm ? Math.max(-15, Math.min(15, +dm[1])) : 2;
+  const mm = meta.match(/MOOD:\s*(warming|holding|cooling)/i);
+  const mood = mm ? mm[1].toLowerCase() : null;
+  let delta = dm ? Math.max(-15, Math.min(15, +dm[1])) : null;
+  // The meter must NEVER freeze: if the model omitted DELTA or sent 0, derive the
+  // movement from MOOD instead, and fall back to a small positive nudge.
+  if (delta === null || delta === 0) {
+    delta = mood === "cooling" ? -3 : mood === "warming" ? 4 : 2;
+  }
   let event = em ? em[1].toLowerCase() : "none";
-  return { spoken, delta, event };
+  return { spoken, delta, event, mood };
 }
 
 async function simCharacterTurn(isFirst) {
@@ -2030,9 +2060,19 @@ async function simCharacterTurn(isFirst) {
       renderMeterDelta(delta);
     }
 
-    // Resolve win/lose. "give" must be genuinely earned; force a loss if interest bottoms out.
+    // Resolve win/lose. If the character actually offers (number / next meeting),
+    // that IS the win — honour it and snap the meter up to match, so the bar can
+    // never sit at 50 while they're handing over their number.
     let result = null;
-    if (event === "give" && sim.interest >= 75 && sim.turns >= 4) result = "won";
+    if (event === "give" && sim.turns >= 3) {
+      result = "won";
+      if (sim.interest < WIN_SNAP) {
+        sim.interest = WIN_SNAP;
+        sim.peak = Math.max(sim.peak, sim.interest);
+        updateMeter(true);
+        renderMeterDelta(0, "win");
+      }
+    }
     else if (event === "leave" || sim.interest <= 0) result = "lost";
 
     sim.busy = false;
