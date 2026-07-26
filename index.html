@@ -30,7 +30,13 @@
     font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
   }
-  #app { max-width: 760px; margin: 0 auto; padding: 20px 16px 48px; min-height: 100%; }
+  /* Home spreads wide so the cards sit side by side; every other screen stays at a
+     comfortable reading width so paragraphs don't stretch into long lines. */
+  /* z-index note: #bgfx sits at 0 and #app at 1 rather than parking the background
+     on z-index:-1. A fixed negative-z layer under backdrop-filter'd cards drops
+     tiles while scrolling in Chromium and paints through to the body as black. */
+  #app { max-width: 1080px; margin: 0 auto; padding: 20px 16px 48px; min-height: 100%; position: relative; z-index: 1; }
+  .screen:not(#scr-home) { max-width: 780px; margin-inline: auto; }
 
   .screen { display: none; animation: fadeUp .35s ease both; }
   .screen.active { display: block; }
@@ -78,8 +84,8 @@
   .hero { text-align: center; padding: 26px 10px 30px; }
   .hero h1 { font-size: 40px; font-weight: 800; line-height: 1.15; }
   .hero h1 em { font-style: normal; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .hero p { color: var(--muted); margin-top: 10px; font-size: 16px; }
-  #modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 10px; }
+  .hero p { color: var(--muted); margin-top: 10px; font-size: 16px; max-width: 620px; margin-inline: auto; }
+  #modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(225px, 1fr)); gap: 14px; margin-top: 10px; }
   .mode-card {
     text-align: left; cursor: pointer; position: relative; overflow: hidden;
     background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 20px;
@@ -386,7 +392,7 @@
      Everything here is position:fixed inside a full-viewport layer, so the scene is
      pixel-identical at every scroll position — no gradient seam halfway down. */
   #bgfx {
-    position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
+    position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
     background:
       radial-gradient(1200px 780px at 78% -10%, rgba(124,92,255,.20), transparent 62%),
       radial-gradient(1000px 700px at -10% 106%, rgba(0,212,255,.14), transparent 62%),
@@ -494,10 +500,17 @@
   @keyframes twinkle { from { opacity: .22; } to { opacity: .58; } }
   @keyframes twinkleBright { from { opacity: .55; } to { opacity: 1; } }
 
-  /* glass panels — let the aurora glow through */
-  .card, .mode-card, .lesson-row, #liveTranscript, .stat-tile, #simLive {
-    background: rgba(20, 25, 39, .66);
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  /* Glass panels — see-through enough for the nebula to glow behind them, but
+     lifted off the background by a bright top edge and a deep drop shadow. */
+  .card, .mode-card, .lesson-row, #liveTranscript, .stat-tile, #simLive, .feature-card, .diff-card {
+    background: rgba(19, 24, 40, .42);
+    backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border-color: rgba(255, 255, 255, .13);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .09);
+  }
+  .mode-card:hover, .feature-card:hover, .diff-card:hover {
+    background: rgba(24, 30, 50, .55);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .14);
   }
   .pill, .bubble.them, .badge {
     background: rgba(27, 34, 54, .6);
