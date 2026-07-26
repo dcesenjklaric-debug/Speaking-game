@@ -259,6 +259,62 @@
   .bubble.them { background: var(--panel-2); border: 1px solid var(--line); align-self: flex-start; border-bottom-left-radius: 4px; }
   .bubble.me { background: linear-gradient(135deg, rgba(124,92,255,.85), rgba(0,212,255,.7)); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
   .bubble.sys { background: none; color: var(--muted); font-size: 13px; align-self: center; text-align: center; }
+  /* live simulator hero card (the app's headline feature) */
+  .sim-hero {
+    display: flex; align-items: center; gap: 20px; width: 100%; text-align: left;
+    cursor: pointer; color: var(--text); font: inherit; position: relative; overflow: hidden;
+    border-radius: 22px; padding: 24px 26px; margin-top: 18px;
+    background: linear-gradient(135deg, rgba(124,92,255,.20), rgba(0,212,255,.13) 55%, rgba(255,92,225,.12));
+    border: 1px solid rgba(124,92,255,.55);
+    box-shadow: 0 10px 40px rgba(124,92,255,.18);
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s;
+  }
+  .sim-hero:hover { transform: translateY(-4px); border-color: var(--accent-2); box-shadow: 0 16px 50px rgba(124,92,255,.3); }
+  .sim-hero::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background: radial-gradient(520px 220px at 15% -30%, rgba(255,255,255,.10), transparent 70%);
+  }
+  .sim-hero .sh-emoji {
+    font-size: 42px; width: 74px; height: 74px; flex: 0 0 auto; border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(11,14,23,.45); border: 1px solid rgba(255,255,255,.14);
+  }
+  .sim-hero h3 { font-size: 23px; margin-bottom: 5px; }
+  .sim-hero p { color: #c9d2ee; font-size: 14px; line-height: 1.5; }
+  .sim-hero .sh-tags { margin-top: 10px; font-size: 12px; font-weight: 700; letter-spacing: .4px; color: var(--accent-2); }
+  .sim-hero .sh-live {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800;
+    letter-spacing: 1px; color: #fff; background: var(--bad); border-radius: 999px;
+    padding: 3px 10px; margin-bottom: 8px;
+  }
+  .sim-hero .sh-live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: pulse 1.2s infinite; }
+  @media (max-width: 560px) {
+    .sim-hero { flex-direction: column; align-items: flex-start; gap: 14px; padding: 20px; }
+  }
+
+  /* live (hard mode) HUD */
+  .live-hud { width: 100%; max-width: 420px; margin: 0 auto; }
+  .live-status { font-weight: 800; font-size: 15px; text-align: center; margin-bottom: 8px; }
+  .live-status.urge { color: var(--bad); animation: tick .5s infinite alternate; }
+  .live-status.hearing { color: var(--good); }
+  .live-bar { height: 8px; border-radius: 99px; background: var(--panel-2); border: 1px solid var(--line); overflow: hidden; }
+  .live-bar-fill { height: 100%; border-radius: 99px; background: var(--grad); transition: width .1s linear; }
+  .live-bar-fill.danger { background: linear-gradient(135deg, #ff5470, #ff8a5c); }
+  .live-hint { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 7px; }
+
+  /* difficulty picker */
+  .diff-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 10px; }
+  .diff-card {
+    text-align: left; cursor: pointer; color: var(--text); font: inherit;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 15px; padding: 15px;
+    transition: border-color .15s, transform .15s, background .15s;
+  }
+  .diff-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+  .diff-card.sel { border-color: var(--accent); background: rgba(124,92,255,.14); }
+  .diff-card.sel.hard { border-color: var(--bad); background: rgba(255,84,112,.13); }
+  .diff-card .dt { font-weight: 800; font-size: 15px; }
+  .diff-card .dd { color: var(--muted); font-size: 12.5px; line-height: 1.45; margin-top: 4px; }
+
   /* simulator goal banner */
   #simGoal {
     margin: 10px auto 4px; max-width: 520px; text-align: center;
@@ -444,6 +500,17 @@
       <h1>Speak on the spot.<br><em>Get scarily good at it.</em></h1>
       <p>Pick a challenge, think for a few seconds, then talk. Your mic listens and scores you like a coach.</p>
     </div>
+    <!-- headline feature: the live simulator -->
+    <button class="sim-hero" onclick="showSimSetup()">
+      <span class="sh-emoji">🎭</span>
+      <span>
+        <span class="sh-live">LIVE</span>
+        <h3>Live Conversation</h3>
+        <p>Talk out loud to a real-feeling person, in real time. Read the room, win them over — or watch them lose interest and walk. Now with difficulty levels.</p>
+        <span class="sh-tags">☕ EVERYDAY · 💘 DATING · 💼 BUSINESS</span>
+      </span>
+    </button>
+
     <!-- today's spotlight -->
     <div id="dailyCard"></div>
     <div id="focusBanner"></div>
@@ -554,6 +621,23 @@
     <div style="display:flex;justify-content:center;gap:10px;margin-top:20px;flex-wrap:wrap;">
       <button class="btn" id="lessonDrillBtn">🎤 Practice this now</button>
       <button class="btn ghost" onclick="showLessons(currentTrackKey)">← Lessons</button>
+    </div>
+  </section>
+
+  <!-- ============ LIVE SIMULATOR: SETUP ============ -->
+  <section id="scr-simsetup" class="screen">
+    <h2 style="margin-bottom:4px;">🎭 Live Conversation</h2>
+    <p style="color:var(--muted);font-size:14px;">Pick who you're talking to and how hard they are to win over.</p>
+
+    <div class="section-head" style="margin-top:22px;"><h2>Who</h2></div>
+    <div class="diff-grid" id="simTrackPick"></div>
+
+    <div class="section-head" style="margin-top:22px;"><h2>Difficulty</h2></div>
+    <div class="diff-grid" id="simDiffPick"></div>
+
+    <div style="display:flex;justify-content:center;gap:10px;margin-top:26px;flex-wrap:wrap;">
+      <button class="btn" onclick="startSimFromSetup()">🎬 Start conversation</button>
+      <button class="btn ghost" onclick="goHome()">← Back</button>
     </div>
   </section>
 
@@ -1847,10 +1931,72 @@ function startWeakRound(ch, fix, srcName) {
 /* ------------------------- SIMULATOR ------------------------- */
 let sim = null;
 
-// The score the player is visibly aiming for, and the floor the meter snaps to
-// when the character actually offers (so the bar can never contradict the win).
+// The floor the meter snaps to when the character actually offers, so the bar
+// can never contradict the win. The target score itself is per-difficulty.
 const WIN_AT = 75;
 const WIN_SNAP = 85;
+
+/* Difficulty. "live" mode removes the Reply button entirely: the mic opens the
+   instant they stop talking and you have to answer on the spot. */
+const SIM_DIFF = {
+  easy: {
+    emoji: "🌤️", name: "Easy", winAt: 70, gainMult: 1.35, lossMult: 0.6, live: false,
+    desc: "Forgiving. They warm up fast and cut you slack. Reply whenever you're ready.",
+    persona: "You are warm and generous — you give people the benefit of the doubt, laugh easily, and warm up quickly. Small awkwardness doesn't bother you.",
+  },
+  medium: {
+    emoji: "⚖️", name: "Medium", winAt: 75, gainMult: 1, lossMult: 1, live: false,
+    desc: "Realistic. Normal standards, normal patience. Reply when you're ready.",
+    persona: "You are a normal person with normal standards — pleasant, but you have to actually be won over.",
+  },
+  hard: {
+    emoji: "🔥", name: "Hard", winAt: 80, gainMult: 0.65, lossMult: 1.6, live: true,
+    graceMs: 3000, silenceMs: 1800, stallPenalty: 9, maxStalls: 3,
+    desc: "No Reply button. The mic opens the second they stop — hesitate and they notice. Interest drops fast.",
+    persona: "You are hard to impress and easily bored. You have somewhere else to be, your attention is a scarce resource, and you do not hand out interest for free. Generic or low-effort lines visibly lose you.",
+  },
+};
+function simDiff() { return SIM_DIFF[(sim && sim.diff) || save.simDiff || "medium"]; }
+function simWinAt() { return simDiff().winAt; }
+
+// What they say when you freeze in live mode (instant, no API round-trip).
+const STALL_LINES = {
+  everyday: ["…You still with me?", "Hello? Did I lose you there?", "Okay — this got awkward fast."],
+  dating:   ["…Hello? Still there?", "Wow, okay. Dead air.", "You went quiet on me. Not a great sign."],
+  business: ["…Everything alright?", "Sorry — did I lose you?", "Hm. Shall we pick this up another time?"],
+};
+
+let setupTrack = null, setupDiff = null;
+function showSimSetup() {
+  stopEverything();
+  if (!aiAvailable()) {
+    showSettings();
+    document.getElementById("keyStatus").textContent = "The live simulator needs an API key — paste one here first.";
+    document.getElementById("keyStatus").style.color = "var(--warn)";
+    return;
+  }
+  setupTrack = save.simTrack || "everyday";
+  setupDiff = save.simDiff || "medium";
+  renderSimSetup();
+  show("scr-simsetup");
+}
+function renderSimSetup() {
+  document.getElementById("simTrackPick").innerHTML = Object.entries(SMALLTALK).map(([k, t]) =>
+    `<button class="diff-card ${k === setupTrack ? "sel" : ""}" onclick="pickTrack('${k}')">
+      <div class="dt">${t.emoji} ${t.name}</div><div class="dd">${escapeHtml(t.desc)}</div>
+    </button>`).join("");
+  document.getElementById("simDiffPick").innerHTML = Object.entries(SIM_DIFF).map(([k, d]) =>
+    `<button class="diff-card ${k} ${k === setupDiff ? "sel" : ""}" onclick="pickDiff('${k}')">
+      <div class="dt">${d.emoji} ${d.name}</div><div class="dd">${escapeHtml(d.desc)}</div>
+    </button>`).join("");
+}
+function pickTrack(k) { setupTrack = k; renderSimSetup(); }
+function pickDiff(k) { setupDiff = k; renderSimSetup(); }
+function startSimFromSetup() {
+  save.simTrack = setupTrack; save.simDiff = setupDiff; persist();
+  currentTrackKey = setupTrack;
+  startSim(setupDiff);
+}
 
 // Per-track reskin of the live interest meter + win/lose framing.
 const METER_SKINS = {
@@ -1922,7 +2068,7 @@ function renderMeterDelta(delta, kind) {
   }
 }
 
-function startSim() {
+function startSim(diffKey) {
   stopEverything();
   if (!aiAvailable()) {
     showSettings();
@@ -1932,22 +2078,26 @@ function startSim() {
   }
   const t = SMALLTALK[currentTrackKey];
   const sc = t.scenes[Math.floor(Math.random() * t.scenes.length)];
-  sim = { trackKey: currentTrackKey, scene: sc, log: [], turns: 0, busy: false, rec: null, transcript: "", ended: false, interest: 50, result: null, peak: 50 };
-  document.getElementById("simTag").textContent = t.emoji + " " + t.tag + " · SIMULATOR";
+  const diff = SIM_DIFF[diffKey] ? diffKey : (save.simDiff || "medium");
+  sim = { trackKey: currentTrackKey, scene: sc, log: [], turns: 0, busy: false, rec: null, transcript: "", ended: false,
+          interest: 50, result: null, peak: 50, diff, stalls: 0 };
+  document.getElementById("simTag").textContent = t.emoji + " " + t.tag + " · " + SIM_DIFF[diff].emoji + " " + SIM_DIFF[diff].name.toUpperCase();
   document.getElementById("simScene").textContent = "📍 " + sc.scene;
   document.getElementById("chatLog").innerHTML = "";
   document.getElementById("simCoachOut").style.display = "none";
   document.getElementById("simLive").style.display = "none";
   const skin = METER_SKINS[sim.trackKey];
   document.getElementById("simGoal").innerHTML =
-    skin.goalLine + ' <span class="g-sub">— reach ' + WIN_AT + '/100</span>';
+    skin.goalLine + ' <span class="g-sub">— reach ' + simWinAt() + '/100</span>';
   document.getElementById("simMeter").style.display = "";
   document.getElementById("mtrLabel").textContent = skin.emoji + " " + skin.label;
   document.getElementById("mtrNote").className = "mtr-note";
   document.getElementById("mtrNote").textContent = "";
   updateMeter(false);
   show("scr-sim");
-  simSysNote("They speak first. Reply out loud — real conversation rules apply.");
+  simSysNote(SIM_DIFF[diff].live
+    ? "🔥 HARD — no Reply button. The mic opens the moment they stop talking; answer straight away or they'll notice the silence."
+    : "They speak first. Reply out loud — real conversation rules apply.");
   simCharacterTurn(true);
 }
 
@@ -1957,6 +2107,8 @@ function simSystemPrompt() {
   return `You are role-playing ONE real person in a spoken small-talk practice game. Track: ${t.name}.
 Scene: ${sim.scene.scene}. Your character: ${sim.scene.persona}.
 The player is trying to win you over — your goal-state is being ${skin.goal}. You are NOT easy. You are a real person with real reactions, not a supportive coach.
+
+DIFFICULTY — ${simDiff().name.toUpperCase()}: ${simDiff().persona}
 
 HOW TO REACT (this is the whole point — be honest, not nice):
 - Reward: genuine curiosity, playful confidence, good listening that builds on what you just said, warmth without neediness, a bit of wit.
@@ -1990,7 +2142,7 @@ DELTA calibration — you MUST move the meter every turn. NEVER output 0 for a l
 - -10 to -15 — awful: rude, creepy, pushy.
 Small talk should feel like it's GOING somewhere — a decent conversation climbs steadily, a bad one bleeds out.
 EVENT rules:
-- "give" once your interest is ${WIN_AT}+ and at least 3 exchanges have happened. Do NOT stall past that — when you're genuinely won over, act on it within a turn or two instead of dragging the conversation on forever. This is the player's goal and it must be reachable. When you use "give", your spoken line naturally ${skin.give}, then signals you genuinely have to head off now (somewhere to be) — a natural, happy exit, not an abrupt one.
+- "give" once your interest is ${simWinAt()}+ and at least 3 exchanges have happened. Do NOT stall past that — when you're genuinely won over, act on it within a turn or two instead of dragging the conversation on forever. This is the player's goal and it must be reachable. When you use "give", your spoken line naturally ${skin.give}, then signals you genuinely have to head off now (somewhere to be) — a natural, happy exit, not an abrupt one.
 - CRITICAL: if your spoken line offers your number / a date / a next meeting in ANY form, you MUST set EVENT: give on that same turn. Never offer in words while reporting EVENT: none — the two must always agree.
 - "leave" when your interest has hit rock bottom or they've been rude/creepy — your spoken line makes a graceful but real exit.
 - Otherwise "none".
@@ -2054,10 +2206,13 @@ async function simCharacterTurn(isFirst) {
     simBubble("them", spoken);
 
     if (!isFirst) {
-      sim.interest = Math.max(0, Math.min(100, sim.interest + delta));
+      const d = simDiff();
+      let scaled = Math.round(delta * (delta >= 0 ? d.gainMult : d.lossMult));
+      if (scaled === 0 && delta !== 0) scaled = delta > 0 ? 1 : -1;   // never freeze
+      sim.interest = Math.max(0, Math.min(100, sim.interest + scaled));
       sim.peak = Math.max(sim.peak, sim.interest);
       updateMeter(true);
-      renderMeterDelta(delta);
+      renderMeterDelta(scaled);
     }
 
     // Resolve win/lose. If the character actually offers (number / next meeting),
@@ -2078,6 +2233,7 @@ async function simCharacterTurn(isFirst) {
     sim.busy = false;
     if (result) { simFinish(result); return; }
     renderSimControls();
+    if (simDiff().live) simBeginLiveTurn();   // hard mode: mic opens immediately
   } catch (e) {
     typing.remove();
     if (!sim) return;
@@ -2085,6 +2241,109 @@ async function simCharacterTurn(isFirst) {
     sim.busy = false;
     renderSimControls();
   }
+}
+
+/* ---------- HARD MODE: speak-on-the-spot turn loop ----------
+   No Reply button. The mic opens the instant they stop talking; you get a short
+   grace window to start speaking, then ~2s of silence auto-sends what you said.
+   Freeze up and they call it out and lose interest. */
+let liveT = null;
+function liveClear() { if (liveT && liveT.iv) clearInterval(liveT.iv); liveT = null; }
+
+function liveSetPhase(phase, ms) {
+  liveClear();
+  liveT = { phase, total: ms, deadline: Date.now() + ms, iv: null };
+  liveT.iv = every(liveTick, 100);
+  liveTick();
+}
+
+function liveTick() {
+  if (!sim || sim.ended || !liveT) return;
+  const left = liveT.deadline - Date.now();
+  const pct = Math.max(0, Math.min(100, (left / liveT.total) * 100));
+  const fill = document.getElementById("liveBarFill");
+  const status = document.getElementById("liveStatus");
+  if (fill) {
+    fill.style.width = pct + "%";
+    fill.className = "live-bar-fill" + (liveT.phase === "grace" && pct < 45 ? " danger" : "");
+  }
+  if (status && liveT.phase === "grace") {
+    const secs = Math.max(0, Math.ceil(left / 1000));
+    status.textContent = "🎙️ SPEAK NOW — " + secs + "s";
+    status.className = "live-status" + (pct < 45 ? " urge" : "");
+  }
+  if (left <= 0) {
+    if (liveT.phase === "grace") { liveClear(); simStall(); }
+    else { liveClear(); simAutoSend(); }
+  }
+}
+
+function simBeginLiveTurn() {
+  if (!sim || sim.ended || sim.busy) return;
+  const d = simDiff();
+  sim.transcript = ""; sim.recording = true; sim.heard = false;
+  const live = document.getElementById("simLive");
+  live.style.display = "";
+  live.innerHTML = '<span style="opacity:.6">🎙️ Go — say something…</span>';
+  sim.rec = makeRecognizer(
+    (finalText) => { sim.transcript += finalText; onLiveActivity(); },
+    (interim) => {
+      document.getElementById("simLive").innerHTML =
+        escapeHtml(sim.transcript) + ' <span style="color:var(--accent-2)">' + escapeHtml(interim) + "</span>";
+      if (interim.trim()) onLiveActivity();
+    },
+    () => {}
+  );
+  sim.rec.start();
+  simStartAudioCapture();
+  renderSimControls();
+  liveSetPhase("grace", d.graceMs);
+}
+
+// Any speech resets the clock: first words end the grace period, later words
+// keep pushing the silence deadline out until you actually stop.
+function onLiveActivity() {
+  if (!sim || !sim.recording || sim.ended) return;
+  const d = simDiff();
+  const status = document.getElementById("liveStatus");
+  if (!sim.heard) {
+    sim.heard = true;
+    if (status) { status.textContent = "🎧 Listening…"; status.className = "live-status hearing"; }
+  }
+  if (sim.transcript.trim()) {
+    document.getElementById("simLive").innerHTML = escapeHtml(sim.transcript);
+  }
+  liveSetPhase("speak", d.silenceMs);
+}
+
+function simAutoSend() {
+  if (!sim || sim.ended) return;
+  if (!sim.transcript.trim()) { liveSetPhase("grace", simDiff().graceMs); return; }
+  simSend();
+}
+
+function simStall() {
+  if (!sim || sim.ended) return;
+  const d = simDiff();
+  sim.stalls = (sim.stalls || 0) + 1;
+  const lines = STALL_LINES[sim.trackKey] || STALL_LINES.everyday;
+  const line = lines[Math.min(sim.stalls - 1, lines.length - 1)];
+
+  sim.interest = Math.max(0, sim.interest - d.stallPenalty);
+  updateMeter(true);
+  renderMeterDelta(-d.stallPenalty);
+  sim.log.push({ who: "them", text: line });
+  simBubble("them", line);
+
+  if (sim.stalls >= d.maxStalls || sim.interest <= 0) {
+    if (sim.rec) { sim.rec.stop(); sim.rec = null; }
+    sim.recording = false;
+    liveClear();
+    document.getElementById("simLive").style.display = "none";
+    simFinish("lost");
+    return;
+  }
+  liveSetPhase("grace", d.graceMs);   // one more chance
 }
 
 function simFinish(result) {
@@ -2104,6 +2363,15 @@ function renderSimControls() {
   const c = document.getElementById("simControls");
   if (sim.ended) { c.innerHTML = ""; return; }
   if (sim.busy) { c.innerHTML = '<div class="spinner"></div>'; return; }
+  if (simDiff().live && sim.recording) {
+    // hard mode: no buttons — a countdown you have to talk over
+    c.innerHTML = `<div class="live-hud">
+        <div class="live-status" id="liveStatus">🎙️ SPEAK NOW</div>
+        <div class="live-bar"><div class="live-bar-fill" id="liveBarFill"></div></div>
+        <div class="live-hint">Stop talking for a moment and it sends automatically${sim.turns >= 3 ? ' · <a href="#" onclick="simEnd();return false;" style="color:var(--muted)">end &amp; get coached</a>' : ""}</div>
+      </div>`;
+    return;
+  }
   if (sim.recording) {
     c.innerHTML = `<button class="btn danger" onclick="simSend()">✅ Send reply</button>
       <button class="btn ghost" onclick="simCancelRec()">✖ Cancel</button>`;
@@ -2124,23 +2392,27 @@ function simStartRec() {
     () => {}
   );
   sim.rec.start();
-  // hear-yourself-back: record the reply in parallel with recognition
-  if (!MOCK && window.MediaRecorder && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-      if (!sim || !sim.recording) { stream.getTracks().forEach(t => t.stop()); return; }
-      const chunks = [];
-      const mr = new MediaRecorder(stream);
-      mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
-      mr.start();
-      sim._recStream = stream;
-      sim._recorder = mr;
-      sim._recChunks = chunks;
-    }).catch(() => {});
-  }
+  simStartAudioCapture();
   renderSimControls();
 }
 
+// hear-yourself-back: record the reply in parallel with recognition
+function simStartAudioCapture() {
+  if (MOCK || !window.MediaRecorder || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    if (!sim || !sim.recording) { stream.getTracks().forEach(t => t.stop()); return; }
+    const chunks = [];
+    const mr = new MediaRecorder(stream);
+    mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    mr.start();
+    sim._recStream = stream;
+    sim._recorder = mr;
+    sim._recChunks = chunks;
+  }).catch(() => {});
+}
+
 function simStopRec() {
+  liveClear();
   if (sim && sim.rec) { sim.rec.stop(); sim.rec = null; }
   if (sim && sim._recorder) {
     try { if (sim._recorder.state !== "inactive") sim._recorder.stop(); } catch (e) {}
@@ -2161,7 +2433,12 @@ function simSend() {
   const chunks = sim._recChunks;          // closure-owned; final chunk lands after stop()
   sim._recChunks = null;
   simStopRec();
-  if (!said) { simSysNote("Didn't catch anything — try again, a bit louder."); renderSimControls(); return; }
+  if (!said) {
+    simSysNote("Didn't catch anything — try again, a bit louder.");
+    renderSimControls();
+    if (simDiff().live && !sim.ended) simBeginLiveTurn();   // reopen the mic, don't strand them
+    return;
+  }
   sim.log.push({ who: "me", text: said });
   sim.turns++;
   const bubble = simBubble("me", said);
@@ -2204,12 +2481,16 @@ ${prevSim.map(e => `${e.d} · ${e.m.slice(4)} track · you scored them ${e.score
     : sim.result === "lost"
     ? `\n=== OUTCOME ===\nThe other person LOST interest and left (interest bottomed out at ${Math.round(sim.interest)}/100, peaked at ${Math.round(sim.peak)}). Be honest about where it went wrong — pinpoint the exact line the energy died on.`
     : `\n=== OUTCOME ===\nThe player ended it themselves. Final interest ${Math.round(sim.interest)}/100 (peaked ${Math.round(sim.peak)}).`;
+  const diffLine = `\nDifficulty: ${simDiff().name}${simDiff().live
+    ? ` — SPEAK-ON-THE-SPOT mode: no reply button, they had ~${Math.round(simDiff().graceMs / 1000)}s to start talking after every line.`
+    + (sim.stalls ? ` They froze and got called out ${sim.stalls} time(s) — address that hesitation directly; under time pressure, a fast imperfect answer beats a slow polished one.` : ` They never froze — credit that composure.`)
+    : ""}`;
   const prompt = `${COACH_EXPERTISE}
 
 You are now coaching SMALL TALK, not public speaking. ${t.simRubric}
 
 === THE SCENE ===
-${sim.scene.scene}. The other person: ${sim.scene.persona}.
+${sim.scene.scene}. The other person: ${sim.scene.persona}.${diffLine}
 
 === THE CONVERSATION (PLAYER lines are live speech-to-text, expect errors) ===
 ${convo}${simHistory}${outcomeLine}
@@ -2300,7 +2581,8 @@ function loadSave() {
 }
 function defaultSave() {
   return { xp:0, rounds:0, streak:0, lastPlayDay:null, history:[], badges:{}, modesPlayed:{}, lessonsDone:[],
-           coachLog:[], baseline:null, baselineCoach:null, realPreps:[], dailyDone:null };
+           coachLog:[], baseline:null, baselineCoach:null, realPreps:[], dailyDone:null,
+           simTrack:"everyday", simDiff:"medium" };
 }
 function persist() { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }
 
