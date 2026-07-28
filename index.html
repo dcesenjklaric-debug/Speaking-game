@@ -5,19 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quick Wit — Speak on the Spot</title>
 <style>
+  /* Palette lifted from design/hero-mockup.html: a violet-black void, violet-tinted
+     panels, and the headline's blue→violet→orchid ramp as the app's gradient. */
   :root {
-    --bg: #0b0e17;
-    --panel: #141927;
-    --panel-2: #1b2236;
-    --line: #262f4a;
-    --text: #e8ecf8;
-    --muted: #8b95b5;
+    --bg: #0b0716;
+    --panel: #17102a;
+    --panel-2: #20163a;
+    --line: #342551;
+    --text: #f2ecff;
+    --muted: #a89fc4;   /* the mockup's #9d94b8, lifted — it has to stay readable
+                           where the nova's beam burns behind a card */
     --accent: #7c5cff;
-    --accent-2: #00d4ff;
+    --accent-2: #7fa8ff;
     --good: #2dd4a7;
     --warn: #ffb020;
     --bad: #ff5470;
-    --grad: linear-gradient(135deg, #7c5cff, #00d4ff);
+    --grad: linear-gradient(96deg, #7fa8ff, #8f8cf5 34%, #b184f0 66%, #d190ee);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; }
@@ -25,7 +28,7 @@
     /* NOTE: no background-image here on purpose. Page-height gradients scroll
        with the content while the #bgfx layer is fixed, and the mismatch shows up
        as a colour seam halfway down. All background art lives in #bgfx. */
-    background: #070a13;
+    background: #07040f;
     color: var(--text);
     font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
@@ -73,7 +76,17 @@
   .pill b { color: var(--text); }
 
   /* ---------- topbar ---------- */
-  #topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 22px; flex-wrap: wrap; }
+  /* Glass pill, like the mockup's nav — it also keeps the topbar legible where the
+     coral ribbon burns brightest along the top edge. */
+  #topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    margin-bottom: 18px; flex-wrap: wrap;
+    padding: 9px 12px 9px 18px; border-radius: 999px;
+    background: rgba(20, 12, 36, .74);
+    backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgba(190, 150, 255, .20);
+    box-shadow: 0 6px 22px rgba(0, 0, 0, .45);
+  }
   #topbar .stats { display: flex; gap: 8px; flex-wrap: wrap; }
   #logo { font-size: 22px; font-weight: 800; letter-spacing: .3px; cursor: pointer; }
   #logo span { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -82,6 +95,14 @@
 
   /* ---------- home ---------- */
   .hero { text-align: center; padding: 26px 10px 30px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 7px; margin-bottom: 20px;
+    padding: 6px 15px 6px 11px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    letter-spacing: .3px; color: #e4d9f7;
+    background: rgba(90, 60, 140, .45); border: 1px solid rgba(190, 150, 255, .35);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  }
+  .eyebrow i { width: 6px; height: 6px; border-radius: 50%; background: #c9a7ff; box-shadow: 0 0 8px #b07bff; }
   .hero h1 { font-size: 40px; font-weight: 800; line-height: 1.15; }
   .hero h1 em { font-style: normal; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .hero p { color: var(--muted); margin-top: 10px; font-size: 16px; max-width: 620px; margin-inline: auto; }
@@ -223,8 +244,8 @@
   .feature-card .meta { margin-top: 14px; font-size: 12px; font-weight: 700; color: var(--fc-meta, var(--accent-2)); letter-spacing: .5px; }
   .feature-card.prep { --fc-glow: rgba(124,92,255,.18); --fc-badge-bg: rgba(124,92,255,.15); --fc-badge-bd: rgba(124,92,255,.4); --fc-meta: var(--accent); }
   .feature-card.prep:hover { border-color: var(--accent); box-shadow: 0 12px 34px rgba(124,92,255,.16); }
-  .feature-card.talk { --fc-glow: rgba(0,212,255,.16); --fc-badge-bg: rgba(0,212,255,.12); --fc-badge-bd: rgba(0,212,255,.35); --fc-meta: var(--accent-2); }
-  .feature-card.talk:hover { border-color: var(--accent-2); box-shadow: 0 12px 34px rgba(0,212,255,.14); }
+  .feature-card.talk { --fc-glow: rgba(127,168,255,.16); --fc-badge-bg: rgba(127,168,255,.12); --fc-badge-bd: rgba(127,168,255,.35); --fc-meta: var(--accent-2); }
+  .feature-card.talk:hover { border-color: var(--accent-2); box-shadow: 0 12px 34px rgba(127,168,255,.14); }
 
   /* daily challenge card */
   .mode-card.daily { border-color: rgba(255,176,32,.5); }
@@ -263,14 +284,14 @@
   }
   .bubble { padding: 10px 14px; border-radius: 14px; max-width: 86%; font-size: 15px; line-height: 1.5; }
   .bubble.them { background: var(--panel-2); border: 1px solid var(--line); align-self: flex-start; border-bottom-left-radius: 4px; }
-  .bubble.me { background: linear-gradient(135deg, rgba(124,92,255,.85), rgba(0,212,255,.7)); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .bubble.me { background: linear-gradient(135deg, rgba(124,92,255,.85), rgba(127,168,255,.7)); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
   .bubble.sys { background: none; color: var(--muted); font-size: 13px; align-self: center; text-align: center; }
   /* live simulator hero card (the app's headline feature) */
   .sim-hero {
     display: flex; align-items: center; gap: 20px; width: 100%; text-align: left;
     cursor: pointer; color: var(--text); font: inherit; position: relative; overflow: hidden;
     border-radius: 22px; padding: 24px 26px; margin-top: 18px;
-    background: linear-gradient(135deg, rgba(124,92,255,.20), rgba(0,212,255,.13) 55%, rgba(255,92,225,.12));
+    background: linear-gradient(135deg, rgba(124,92,255,.20), rgba(127,168,255,.13) 55%, rgba(209,144,238,.12));
     border: 1px solid rgba(124,92,255,.55);
     box-shadow: 0 10px 40px rgba(124,92,255,.18);
     transition: transform .15s ease, box-shadow .15s ease, border-color .15s;
@@ -388,64 +409,56 @@
     #gradeBig { font-size: 72px; }
   }
 
-  /* ================== deep-space background (fixed = seamless when scrolling) ==========
-     Everything here is position:fixed inside a full-viewport layer, so the scene is
-     pixel-identical at every scroll position — no gradient seam halfway down. */
+  /* ================== candle nova (ported from design/hero-mockup.html) ==============
+     Coral ribbon along the top edge, a velvety black-purple void, and a glowing
+     semicircular limb at the bottom with a thin white-hot beam rising out of it.
+     Everything is position:fixed inside a full-viewport layer, so the scene is
+     pixel-identical at every scroll position — no gradient seam halfway down.
+
+     GEOMETRY — the one thing to understand before editing: a radial gradient's rx is a
+     percentage of WIDTH and ry a percentage of HEIGHT, so the mockup's `33% 46%` only
+     draws a half-circle at the mockup's own aspect ratio. Here every bottom layer is
+     sized off one length instead — --nova, the dome's radius — so the dome stays a true
+     semicircle at any viewport and the beam and hazes keep their proportions. The
+     multipliers ARE the mockup's proportions; regenerate colour stops with
+     design/background-generator.py rather than editing them by hand. */
   #bgfx {
     position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+    --nova: clamp(220px, 30vw, 540px);
     background:
-      radial-gradient(1200px 780px at 78% -10%, rgba(124,92,255,.20), transparent 62%),
-      radial-gradient(1000px 700px at -10% 106%, rgba(0,212,255,.14), transparent 62%),
-      radial-gradient(820px 560px at 18% 22%, rgba(255,92,225,.09), transparent 68%),
-      radial-gradient(900px 620px at 95% 72%, rgba(18,184,166,.09), transparent 66%),
-      linear-gradient(178deg, #0a0d1e 0%, #0b0f22 38%, #080b16 72%, #06080f 100%);
+      /* coral ribbon on the horizon. Sized in px, not %, so the band stays the
+         mockup's ~90px thick instead of growing with the viewport — and so it always
+         ends above the hero. The topbar sits inside it, hence the glass pill there. */
+      radial-gradient(ellipse 96% 110px at 50% -20px,
+        rgba(255,172,144,0.973) 0%, rgba(253,170,145,0.965) 2.8%, rgba(251,167,145,0.953) 5.6%, rgba(250,165,146,0.937) 8.3%, rgba(248,162,147,0.922) 11.1%, rgba(246,160,148,0.906) 13.9%, rgba(244,158,148,0.886) 16.7%, rgba(243,155,149,0.867) 19.4%, rgba(241,153,150,0.843) 22.2%, rgba(239,150,151,0.824) 25%, rgba(237,148,151,0.800) 27.8%, rgba(235,145,152,0.776) 30.6%, rgba(229,141,150,0.753) 33.3%, rgba(223,137,149,0.725) 36.1%, rgba(217,133,147,0.702) 38.9%, rgba(211,129,145,0.675) 41.7%, rgba(205,125,144,0.647) 44.4%, rgba(199,121,142,0.620) 47.2%, rgba(193,117,141,0.592) 50%, rgba(187,113,139,0.561) 52.8%, rgba(180,109,137,0.533) 55.6%, rgba(172,104,132,0.502) 58.3%, rgba(163,98,127,0.471) 61.1%, rgba(154,93,122,0.443) 63.9%, rgba(145,88,117,0.412) 66.7%, rgba(137,82,112,0.376) 69.4%, rgba(128,77,107,0.345) 72.2%, rgba(119,72,101,0.314) 75%, rgba(111,66,96,0.278) 77.8%, rgba(103,62,92,0.247) 80.6%, rgba(96,58,87,0.212) 83.3%, rgba(89,53,82,0.176) 86.1%, rgba(82,49,77,0.141) 88.9%, rgba(75,45,72,0.106) 91.7%, rgba(68,41,68,0.071) 94.4%, rgba(61,36,63,0.035) 97.2%, transparent 100%),
+      /* the void itself */
+      radial-gradient(ellipse 135% 72% at 50% 26%,
+        rgba(54,38,108,0.259) 0%, rgba(53,37,106,0.255) 2.8%, rgba(52,37,104,0.251) 5.6%, rgba(51,36,102,0.247) 8.3%, rgba(50,35,100,0.239) 11.1%, rgba(49,35,98,0.235) 13.9%, rgba(48,34,96,0.227) 16.7%, rgba(47,33,95,0.224) 19.4%, rgba(46,33,93,0.216) 22.2%, rgba(45,32,91,0.208) 25%, rgba(44,31,89,0.204) 27.8%, rgba(43,31,87,0.196) 30.6%, rgba(42,30,85,0.188) 33.3%, rgba(41,29,83,0.184) 36.1%, rgba(40,29,81,0.176) 38.9%, rgba(39,28,79,0.169) 41.7%, rgba(38,27,77,0.161) 44.4%, rgba(37,27,75,0.153) 47.2%, rgba(36,26,73,0.145) 50%, rgba(35,26,72,0.137) 52.8%, rgba(34,25,70,0.129) 55.6%, rgba(33,24,68,0.122) 58.3%, rgba(32,24,66,0.114) 61.1%, rgba(31,23,65,0.106) 63.9%, rgba(30,23,63,0.098) 66.7%, rgba(30,22,62,0.090) 69.4%, rgba(29,22,60,0.082) 72.2%, rgba(28,21,58,0.075) 75%, rgba(27,20,57,0.067) 77.8%, rgba(26,20,55,0.059) 80.6%, rgba(25,19,54,0.051) 83.3%, rgba(24,19,52,0.043) 86.1%, rgba(23,18,50,0.035) 88.9%, rgba(23,18,49,0.027) 91.7%, rgba(22,17,47,0.016) 94.4%, rgba(21,17,46,0.008) 97.2%, transparent 100%),
+      #0b0716;
   }
-  /* faint milky-way band across the scene */
-  #bgfx .band {
-    position: absolute; left: -25%; right: -25%; top: 22%; height: 46%;
-    background: radial-gradient(58% 50% at 50% 50%, rgba(164,184,255,.085), transparent 72%);
-    transform: rotate(-17deg); filter: blur(22px);
+  /* The limb and its beam, on their own layer so the whole nova can breathe without
+     dragging the void and the ribbon along with it. */
+  #bgfx .nova {
+    position: absolute; inset: 0;
+    background:
+      /* white-hot beam core */
+      radial-gradient(ellipse calc(var(--nova) * .18) calc(var(--nova) * 1.02) at 50% 100%,
+        rgba(255,255,252,1.000) 0%, rgba(255,255,246,0.984) 2.8%, rgba(255,254,241,0.965) 5.6%, rgba(255,254,235,0.941) 8.3%, rgba(255,253,230,0.922) 11.1%, rgba(255,253,224,0.898) 13.9%, rgba(255,253,226,0.875) 16.7%, rgba(255,253,229,0.847) 19.4%, rgba(255,252,231,0.824) 22.2%, rgba(255,252,233,0.796) 25%, rgba(255,252,236,0.773) 27.8%, rgba(252,250,238,0.745) 30.6%, rgba(249,247,240,0.718) 33.3%, rgba(246,245,242,0.690) 36.1%, rgba(243,242,244,0.663) 38.9%, rgba(240,240,246,0.635) 41.7%, rgba(237,237,248,0.608) 44.4%, rgba(230,230,247,0.576) 47.2%, rgba(222,223,246,0.549) 50%, rgba(215,216,246,0.522) 52.8%, rgba(208,209,245,0.490) 55.6%, rgba(200,202,244,0.463) 58.3%, rgba(194,195,244,0.431) 61.1%, rgba(188,187,242,0.404) 63.9%, rgba(182,179,241,0.373) 66.7%, rgba(176,171,240,0.341) 69.4%, rgba(170,163,239,0.314) 72.2%, rgba(165,156,238,0.282) 75%, rgba(161,150,237,0.251) 77.8%, rgba(158,144,236,0.220) 80.6%, rgba(155,138,235,0.188) 83.3%, rgba(151,132,234,0.157) 86.1%, rgba(149,127,234,0.125) 88.9%, rgba(149,124,233,0.094) 91.7%, rgba(148,120,233,0.063) 94.4%, rgba(147,116,232,0.031) 97.2%, transparent 100%),
+      /* beam mid-glow */
+      radial-gradient(ellipse calc(var(--nova) * .364) calc(var(--nova) * .523) at 50% 100%,
+        rgba(255,255,248,1.000) 0%, rgba(255,254,242,0.980) 2.8%, rgba(255,254,237,0.961) 5.6%, rgba(255,253,231,0.937) 8.3%, rgba(255,253,226,0.914) 11.1%, rgba(255,252,220,0.890) 13.9%, rgba(255,252,217,0.867) 16.7%, rgba(255,252,220,0.839) 19.4%, rgba(254,251,224,0.816) 22.2%, rgba(254,251,227,0.788) 25%, rgba(254,251,230,0.761) 27.8%, rgba(253,250,234,0.733) 30.6%, rgba(253,250,237,0.706) 33.3%, rgba(250,247,239,0.682) 36.1%, rgba(246,243,240,0.651) 38.9%, rgba(242,240,241,0.624) 41.7%, rgba(237,236,243,0.596) 44.4%, rgba(233,232,244,0.569) 47.2%, rgba(229,229,245,0.541) 50%, rgba(224,224,246,0.510) 52.8%, rgba(218,218,245,0.482) 55.6%, rgba(213,212,244,0.455) 58.3%, rgba(207,206,244,0.424) 61.1%, rgba(201,199,243,0.396) 63.9%, rgba(195,193,242,0.365) 66.7%, rgba(190,186,241,0.333) 69.4%, rgba(185,179,240,0.306) 72.2%, rgba(181,172,239,0.275) 75%, rgba(176,166,238,0.247) 77.8%, rgba(172,159,237,0.216) 80.6%, rgba(167,152,236,0.184) 83.3%, rgba(164,146,235,0.153) 86.1%, rgba(161,140,235,0.125) 88.9%, rgba(158,134,234,0.094) 91.7%, rgba(156,128,233,0.063) 94.4%, rgba(153,122,233,0.031) 97.2%, transparent 100%),
+      /* the dome — rx and ry equal, so it reads as a true half-circle */
+      radial-gradient(ellipse var(--nova) calc(var(--nova) * .99) at 50% 101%,
+        rgba(255,253,222,0.973) 0%, rgba(255,252,225,0.969) 2.8%, rgba(255,251,228,0.957) 5.6%, rgba(255,250,230,0.945) 8.3%, rgba(251,247,233,0.933) 11.1%, rgba(242,240,237,0.918) 13.9%, rgba(232,233,240,0.902) 16.7%, rgba(223,226,243,0.882) 19.4%, rgba(213,219,246,0.863) 22.2%, rgba(200,208,245,0.843) 25%, rgba(186,196,244,0.820) 27.8%, rgba(173,184,243,0.800) 30.6%, rgba(160,173,243,0.776) 33.3%, rgba(149,162,241,0.749) 36.1%, rgba(140,153,239,0.725) 38.9%, rgba(132,144,238,0.698) 41.7%, rgba(124,135,236,0.671) 44.4%, rgba(116,126,234,0.643) 47.2%, rgba(118,120,233,0.616) 50%, rgba(119,114,233,0.588) 52.8%, rgba(121,109,232,0.557) 55.6%, rgba(123,104,232,0.525) 58.3%, rgba(131,102,233,0.498) 61.1%, rgba(140,100,233,0.463) 63.9%, rgba(148,98,233,0.431) 66.7%, rgba(156,96,234,0.400) 69.4%, rgba(164,97,235,0.365) 72.2%, rgba(171,98,236,0.333) 75%, rgba(179,99,237,0.298) 77.8%, rgba(186,100,238,0.263) 80.6%, rgba(192,102,238,0.227) 83.3%, rgba(197,107,239,0.188) 86.1%, rgba(202,111,239,0.153) 88.9%, rgba(207,115,240,0.114) 91.7%, rgba(212,121,241,0.078) 94.4%, rgba(216,128,243,0.039) 97.2%, transparent 100%),
+      /* wide violet haze around the limb */
+      radial-gradient(ellipse calc(var(--nova) * 2) calc(var(--nova) * 1.35) at 50% 103%,
+        rgba(196,118,240,0.290) 0%, rgba(193,116,239,0.286) 2.8%, rgba(190,115,237,0.282) 5.6%, rgba(188,113,236,0.278) 8.3%, rgba(185,112,234,0.271) 11.1%, rgba(182,110,233,0.267) 13.9%, rgba(179,108,232,0.259) 16.7%, rgba(177,107,230,0.251) 19.4%, rgba(174,105,229,0.247) 22.2%, rgba(171,104,228,0.239) 25%, rgba(168,102,226,0.231) 27.8%, rgba(165,100,223,0.224) 30.6%, rgba(161,98,221,0.216) 33.3%, rgba(157,96,218,0.208) 36.1%, rgba(153,93,215,0.200) 38.9%, rgba(149,91,212,0.192) 41.7%, rgba(146,89,210,0.184) 44.4%, rgba(142,87,207,0.176) 47.2%, rgba(138,85,204,0.169) 50%, rgba(134,83,201,0.161) 52.8%, rgba(131,80,198,0.153) 55.6%, rgba(126,78,193,0.141) 58.3%, rgba(121,75,188,0.133) 61.1%, rgba(116,73,182,0.125) 63.9%, rgba(111,70,177,0.114) 66.7%, rgba(106,68,171,0.106) 69.4%, rgba(102,65,166,0.098) 72.2%, rgba(97,63,160,0.086) 75%, rgba(92,60,154,0.078) 77.8%, rgba(87,57,149,0.071) 80.6%, rgba(82,55,142,0.059) 83.3%, rgba(77,52,135,0.051) 86.1%, rgba(72,49,128,0.039) 88.9%, rgba(67,46,121,0.031) 91.7%, rgba(62,44,114,0.020) 94.4%, rgba(57,41,107,0.012) 97.2%, transparent 100%),
+      /* pale column lifting off the crown */
+      radial-gradient(ellipse calc(var(--nova) * .606) calc(var(--nova) * 1.13) at 50% 101%,
+        rgba(226,226,248,0.408) 0%, rgba(222,222,247,0.404) 2.8%, rgba(219,218,247,0.400) 5.6%, rgba(215,214,246,0.392) 8.3%, rgba(211,210,245,0.384) 11.1%, rgba(208,206,245,0.376) 13.9%, rgba(204,202,244,0.369) 16.7%, rgba(201,198,244,0.361) 19.4%, rgba(197,194,243,0.349) 22.2%, rgba(193,189,242,0.341) 25%, rgba(190,184,241,0.329) 27.8%, rgba(186,179,240,0.322) 30.6%, rgba(182,173,239,0.310) 33.3%, rgba(179,168,238,0.298) 36.1%, rgba(175,162,237,0.290) 38.9%, rgba(171,157,235,0.278) 41.7%, rgba(167,151,234,0.267) 44.4%, rgba(164,146,233,0.255) 47.2%, rgba(160,140,232,0.243) 50%, rgba(157,134,230,0.231) 52.8%, rgba(154,129,228,0.220) 55.6%, rgba(152,123,226,0.204) 58.3%, rgba(149,118,224,0.192) 61.1%, rgba(146,112,222,0.180) 63.9%, rgba(143,107,220,0.169) 66.7%, rgba(141,101,217,0.153) 69.4%, rgba(138,96,215,0.141) 72.2%, rgba(134,90,211,0.125) 75%, rgba(128,86,204,0.114) 77.8%, rgba(122,81,196,0.098) 80.6%, rgba(116,77,189,0.086) 83.3%, rgba(110,72,181,0.071) 86.1%, rgba(104,68,174,0.059) 88.9%, rgba(98,63,166,0.043) 91.7%, rgba(92,59,159,0.027) 94.4%, rgba(86,54,151,0.016) 97.2%, transparent 100%);
+    animation: novaBreathe 11s ease-in-out infinite alternate;
   }
-  #bgfx .blob {
-    position: absolute; border-radius: 50%;
-    filter: blur(95px); will-change: transform;
-  }
-  #bgfx .b1 {
-    width: 620px; height: 620px; top: -200px; left: -140px; opacity: .5;
-    background: radial-gradient(circle at 35% 35%, #7c5cff, transparent 68%);
-    animation: drift1 26s ease-in-out infinite alternate;
-  }
-  #bgfx .b2 {
-    width: 680px; height: 680px; bottom: -240px; right: -180px; opacity: .4;
-    background: radial-gradient(circle at 60% 40%, #00d4ff, transparent 68%);
-    animation: drift2 34s ease-in-out infinite alternate;
-  }
-  #bgfx .b3 {
-    width: 460px; height: 460px; top: 38%; left: 58%; opacity: .24;
-    background: radial-gradient(circle at 50% 50%, #ff5ce1, transparent 68%);
-    animation: drift3 40s ease-in-out infinite alternate;
-  }
-  #bgfx .b4 {
-    width: 560px; height: 560px; bottom: -160px; left: 4%; opacity: .34;
-    background: radial-gradient(circle at 45% 55%, #4c3bcf, transparent 68%);
-    animation: drift4 46s ease-in-out infinite alternate;
-  }
-  #bgfx .b5 {
-    width: 420px; height: 420px; top: -120px; right: 8%; opacity: .26;
-    background: radial-gradient(circle at 50% 50%, #12b8a6, transparent 68%);
-    animation: drift5 38s ease-in-out infinite alternate;
-  }
-  #bgfx .b6 {
-    width: 380px; height: 380px; top: 58%; left: -110px; opacity: .2;
-    background: radial-gradient(circle at 50% 50%, #ff6b9d, transparent 68%);
-    animation: drift6 52s ease-in-out infinite alternate;
-  }
-  @keyframes drift1 { to { transform: translate(150px, 100px) scale(1.15); } }
-  @keyframes drift2 { to { transform: translate(-130px, -90px) scale(1.1); } }
-  @keyframes drift3 { to { transform: translate(-170px, 70px) scale(.88); } }
-  @keyframes drift4 { to { transform: translate(120px, -110px) scale(1.12); } }
-  @keyframes drift5 { to { transform: translate(-90px, 130px) scale(.9); } }
-  @keyframes drift6 { to { transform: translate(160px, -80px) scale(1.18); } }
+  @keyframes novaBreathe { from { opacity: .84; } to { opacity: 1; } }
 
   /* --- starfield: three parallax layers --- */
   #bgfx .stars, #bgfx .stars2, #bgfx .stars3 {
@@ -502,19 +515,22 @@
 
   /* Glass panels — see-through enough for the nebula to glow behind them, but
      lifted off the background by a bright top edge and a deep drop shadow. */
+  /* Glass panels — the mockup's violet-tinted glass. Opaque enough at the top edge to
+     stay legible where the nova's beam burns bright behind the lower half of the page. */
   .card, .mode-card, .lesson-row, #liveTranscript, .stat-tile, #simLive, .feature-card, .diff-card {
-    background: rgba(19, 24, 40, .42);
+    background: linear-gradient(180deg, rgba(38, 20, 64, .90), rgba(20, 12, 36, .84));
     backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%);
-    border-color: rgba(255, 255, 255, .13);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .09);
+    border-color: rgba(190, 150, 255, .20);
+    box-shadow: 0 14px 38px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .07);
   }
   .mode-card:hover, .feature-card:hover, .diff-card:hover {
-    background: rgba(24, 30, 50, .55);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .14);
+    background: linear-gradient(180deg, rgba(52, 29, 86, .92), rgba(28, 17, 50, .86));
+    box-shadow: 0 18px 46px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .13);
   }
   .pill, .bubble.them, .badge {
-    background: rgba(27, 34, 54, .6);
+    background: rgba(40, 25, 68, .62);
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-color: rgba(190, 150, 255, .20);
   }
 
   /* mode cards: gradient top edge + hover glow */
@@ -532,34 +548,28 @@
 
   /* hero: shifting gradient + glow */
   .hero h1 em {
-    background: linear-gradient(90deg, #7c5cff, #00d4ff, #ff5ce1, #7c5cff);
+    background: linear-gradient(90deg, #7fa8ff, #8f8cf5, #b184f0, #d190ee, #7fa8ff);
     background-size: 300% 100%;
     -webkit-background-clip: text; background-clip: text; color: transparent;
     animation: heroShift 9s linear infinite;
     filter: drop-shadow(0 0 26px rgba(124,92,255,.35));
   }
   @keyframes heroShift { to { background-position: 300% 0; } }
-  #logo span { filter: drop-shadow(0 0 12px rgba(0,212,255,.45)); }
+  #logo span { filter: drop-shadow(0 0 12px rgba(127,168,255,.45)); }
 
   /* glow accents */
   #timerWrap svg { filter: drop-shadow(0 0 18px rgba(124,92,255,.35)); }
   #gradeBig { filter: drop-shadow(0 0 30px rgba(124,92,255,.4)); }
-  #prepCount { filter: drop-shadow(0 0 24px rgba(0,212,255,.35)); }
+  #prepCount { filter: drop-shadow(0 0 24px rgba(127,168,255,.35)); }
 
   @media (prefers-reduced-motion: reduce) {
-    #bgfx .blob, #bgfx .stars, #bgfx .stars2, #bgfx .stars3, .hero h1 em { animation: none; }
+    #bgfx .nova, #bgfx .stars, #bgfx .stars2, #bgfx .stars3, .hero h1 em { animation: none; }
   }
 </style>
 </head>
 <body>
 <div id="bgfx" aria-hidden="true">
-  <div class="band"></div>
-  <div class="blob b1"></div>
-  <div class="blob b2"></div>
-  <div class="blob b3"></div>
-  <div class="blob b4"></div>
-  <div class="blob b5"></div>
-  <div class="blob b6"></div>
+  <div class="nova"></div>
   <div class="stars"></div>
   <div class="stars2"></div>
   <div class="stars3"></div>
@@ -583,6 +593,7 @@
   <!-- ============ HOME ============ -->
   <section id="scr-home" class="screen active">
     <div class="hero">
+      <span class="eyebrow"><i></i>Live AI coach</span>
       <h1>Speak on the spot.<br><em>Get scarily good at it.</em></h1>
       <p>Pick a challenge, think for a few seconds, then talk. Your mic listens and scores you like a coach.</p>
     </div>
@@ -767,7 +778,7 @@
         <circle id="ring" cx="95" cy="95" r="84" fill="none" stroke="url(#g1)" stroke-width="10"
                 stroke-linecap="round" stroke-dasharray="527.8" stroke-dashoffset="0"/>
         <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#00d4ff"/>
+          <stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#7fa8ff"/>
         </linearGradient></defs>
       </svg>
       <div id="timerNum">60</div>
@@ -1361,7 +1372,7 @@ async function fetchAiCoaching() {
         deltaHtml = ` <span style="color:var(--muted);font-size:14px;">— your baseline, beat it next round</span>`;
       }
       scoreHtml = `<div style="margin-top:14px;font-weight:800;font-size:18px;">🎯 Coach's score: ${score10}/10${deltaHtml}</div>` +
-        (fix ? `<div style="margin-top:8px;padding:10px 14px;border-left:4px solid var(--accent-2);background:rgba(0,212,255,.07);border-radius:0 10px 10px 0;font-size:14px;"><b style="color:var(--accent-2)">Next round:</b> ${escapeHtml(fix)}</div>
+        (fix ? `<div style="margin-top:8px;padding:10px 14px;border-left:4px solid var(--accent-2);background:rgba(127,168,255,.07);border-radius:0 10px 10px 0;font-size:14px;"><b style="color:var(--accent-2)">Next round:</b> ${escapeHtml(fix)}</div>
         <button class="btn" style="margin-top:10px;padding:11px 20px;font-size:14px;" onclick="startFixDrill(this)">🔧 Drill this weakness now</button>` : "");
       save.coachLog = save.coachLog || [];
       save.coachLog.push({ d: new Date().toISOString().slice(0, 10), m: mKind, score: score10, fix: fix || "" });
@@ -1394,6 +1405,15 @@ const SMALLTALK = {
       { scene: "In line at a coffee shop, Saturday morning", persona: "a relaxed local in their 30s with a golden retriever, friendly but won't carry the conversation for you" },
       { scene: "Office kitchen, Monday morning", persona: "a coworker from another team you've only nodded at before, polite, a bit tired" },
       { scene: "A friend's birthday BBQ", persona: "the host's cousin who knows nobody here either, open to chatting but shy at first" },
+      { scene: "On the platform, train delayed twenty minutes", persona: "a commuter in their 40s leaning on a suitcase, dry sense of humour, happy to grumble together but drifts back to their phone if you're boring" },
+      { scene: "A bench at the dog park", persona: "someone whose dog has just introduced itself to you, easy to talk to about dogs, and noticeably warmer if you can move the conversation past dogs" },
+      { scene: "In the barber's chair, mid-cut", persona: "a barber who has made small talk for fifteen years, will keep it going effortlessly, and privately rates you on whether you ever say anything real" },
+      { scene: "Waiting for the lift in your building", persona: "a neighbour from two floors up you've somehow never spoken to, slightly guarded, thaws quickly if you're normal about it" },
+      { scene: "The buffet queue at a wedding", persona: "a guest from the other side of the family, in a good mood, enjoys a bit of gossip but won't be unkind about anyone" },
+      { scene: "The sideline, five minutes before a five-a-side match", persona: "someone on your team you've not met, blunt and quick, rewards banter and has no patience for small talk that goes nowhere" },
+      { scene: "The tea break in an evening pottery class", persona: "a fellow beginner covered in clay, self-deprecating, opens up fast with anyone who isn't trying to seem competent" },
+      { scene: "Seat 14B, an hour into a six-hour flight", persona: "a passenger who was reading and is deciding whether this becomes a conversation — genuinely might put the headphones back on" },
+      { scene: "The dentist's waiting room", persona: "someone visibly nervous about their appointment, grateful for the distraction, laughs easily at anything that isn't about teeth" },
     ],
     simRubric: `Judge them as an everyday-conversation coach:
 - Threading: did they pull threads from what the other person said, or fire random new topics?
@@ -1490,6 +1510,15 @@ That's it. Short, warm, specific. You leave on a peak instead of a fizzle.`,
       { scene: "A bookstore café, Sunday afternoon", persona: "someone attractive around your age reading at the next table, friendly if approached well but quickly bored by interview questions or try-hard lines" },
       { scene: "A friend's house party", persona: "a friend-of-a-friend you've noticed across the room, witty, will test you with light teasing, warms up to people who can banter back without trying too hard" },
       { scene: "A climbing gym, between routes", persona: "a regular at the gym you've seen a few times, easygoing, responds well to playfulness and genuine curiosity, shuts down at compliments about looks" },
+      { scene: "Waiting at the bar for drinks, Friday night", persona: "someone waiting to be served beside you, quick and playful, gives you about thirty seconds to be interesting before turning back to their friends" },
+      { scene: "First date, coffee, the first ten minutes", persona: "your date, who arrived a little nervous and is hiding it behind politeness — warms up fast if this feels unrehearsed, cools the moment it turns into an interview" },
+      { scene: "Second date, walking from the restaurant to a bar", persona: "someone you've already had one good date with, comfortable enough to tease you now, quietly checking whether you can go deeper than date one did" },
+      { scene: "Speed dating, four minutes on the clock", persona: "the person across the small table, cheerful but brutal about wasted time, has heard the same three questions all evening" },
+      { scene: "Seated next to each other at a friend's dinner party", persona: "a guest you've just been introduced to, curious and easy to talk to, but very aware that other people can hear" },
+      { scene: "In the crowd after the support act, waiting for the main band", persona: "someone near you who clearly loves this band, opinionated about music, unimpressed by anyone pretending to know it" },
+      { scene: "First meeting off a dating app, at the park entrance", persona: "someone whose profile you liked, mildly braced for disappointment, visibly relieved and warmer the moment you're normal in person" },
+      { scene: "Salsa class, the partner rotation just put you together", persona: "someone a bit better at this than you, laughs at mistakes, likes people who don't take themselves too seriously" },
+      { scene: "The farmers market, both reaching for the last punnet", persona: "someone with a canvas bag and strong opinions about tomatoes, quick-witted, enjoys a light stand-off" },
     ],
     simRubric: `Judge them as a dating-conversation coach (keep it respectful — confidence, not pickup artistry):
 - Natural opener rooted in the situation, not a line.
@@ -1584,6 +1613,15 @@ A "no" or "maybe" handled gracefully — "All good, this was fun anyway" — cos
       { scene: "A tech conference happy hour", persona: "a mid-level product manager at a company you'd like to work with, friendly but has met 30 people today and forgets the forgettable ones" },
       { scene: "First 5 minutes of a video call with a new client", persona: "a slightly reserved potential client who hasn't decided if they trust you yet, warms up if the small talk is genuine and hates having their time wasted" },
       { scene: "Sharing a table at a company offsite lunch", persona: "a senior director from another department, gracious but constantly pitched at, allergic to flattery, respects good questions" },
+      { scene: "Alone in the lift with the CEO, six floors", persona: "your company's CEO, friendly but time-poor, genuinely interested in one good sentence and visibly switching off during a ramble" },
+      { scene: "The coffee break at an industry workshop", persona: "another attendee who came alone, quietly glad someone talked to them, and surprisingly open about their real problems if you ask well" },
+      { scene: "An informal first chat with a recruiter who reached out", persona: "a recruiter who is also assessing you, warm and chatty, mentally noting whether you can describe your own work clearly" },
+      { scene: "Walking out of the room after your pitch, side by side with the investor", persona: "an investor who hasn't decided about you yet, direct, and will remember this two-minute walk far better than your deck" },
+      { scene: "Ten minutes before a negotiation, waiting for the others to arrive", persona: "the supplier you're about to negotiate with, cordial and careful, reading you for leverage while sounding perfectly friendly" },
+      { scene: "An alumni networking evening, name badges and warm wine", persona: "a graduate a few years above you, generous with advice once you've earned it, tired of people whose first move is asking for something" },
+      { scene: "Just after their talk, the speaker is packing up their laptop", persona: "the speaker, still slightly on adrenaline, delighted by a specific question about the talk and deflated by a generic compliment" },
+      { scene: "A client dinner, the starters have just arrived", persona: "your main client contact, relaxed by the setting, happy to leave business until later and wanting to like you first" },
+      { scene: "The co-working space kitchen, both waiting on the kettle", persona: "a founder from another startup on your floor, competitive and curious, sizes people up fast but genuinely loves talking shop" },
     ],
     simRubric: `Judge them as a professional-networking coach:
 - Warmth without sleaze: genuine interest vs transparent networking.
@@ -1947,7 +1985,7 @@ function renderHomeExtras() {
     </button>`;
   const fx = (save.coachLog || []).slice(-1)[0];
   document.getElementById("focusBanner").innerHTML = (fx && fx.fix) ? `
-    <div style="margin-top:14px;padding:12px 16px;border-radius:12px;border:1px solid rgba(0,212,255,.35);background:rgba(0,212,255,.06);display:flex;align-items:center;gap:10px;flex-wrap:wrap;text-align:left;">
+    <div style="margin-top:14px;padding:12px 16px;border-radius:12px;border:1px solid rgba(127,168,255,.35);background:rgba(127,168,255,.06);display:flex;align-items:center;gap:10px;flex-wrap:wrap;text-align:left;">
       <span style="font-size:14px;flex:1;min-width:220px;"><b style="color:var(--accent-2)">🔧 Coach's focus:</b> ${escapeHtml(fx.fix)}</span>
       <button class="btn ghost" style="padding:9px 16px;font-size:13px;" onclick="startFixDrill(this)">Drill it now</button>
     </div>` : "";
@@ -2037,8 +2075,11 @@ const SIM_DIFF = {
   },
   hard: {
     emoji: "🔥", name: "Hard", winAt: 80, gainMult: 0.65, lossMult: 1.6, live: true,
-    graceMs: 3000, silenceMs: 1800, stallPenalty: 9, maxStalls: 3,
-    desc: "No Reply button. The mic opens the second they stop — hesitate and they notice. Interest drops fast.",
+    // graceMs is a READING window as much as a speaking one — you have to take in what
+    // they just said before you can answer it. urgeMs is the tail of that window where
+    // the HUD switches from "take it in" to "speak now" and starts pushing.
+    graceMs: 12000, urgeMs: 5000, silenceMs: 1800, stallPenalty: 9, maxStalls: 3,
+    desc: "No Reply button. The mic opens the second they stop and the clock runs — freeze and they notice. Interest drops fast.",
     persona: "You are hard to impress and easily bored. You have somewhere else to be, your attention is a scarce resource, and you do not hand out interest for free. Generic or low-effort lines visibly lose you.",
   },
 };
@@ -2154,6 +2195,22 @@ function renderMeterDelta(delta, kind) {
   }
 }
 
+/* Straight random re-draws the same scene far too often to feel varied — with a dozen
+   scenes you still hit a repeat roughly every other run. So the recent third of a
+   track's list is taken off the table, remembered in the save so it survives a reload,
+   and only reset once every scene has been through. */
+function pickScene(trackKey) {
+  const list = SMALLTALK[trackKey].scenes;
+  if (!save.recentScenes) save.recentScenes = {};
+  const recent = save.recentScenes[trackKey] || [];
+  const pool = list.filter((_, i) => !recent.includes(i));
+  const sc = (pool.length ? pool : list)[Math.floor(Math.random() * (pool.length || list.length))];
+  const keep = Math.max(1, Math.floor(list.length / 3));
+  save.recentScenes[trackKey] = [list.indexOf(sc), ...recent].slice(0, keep);
+  persist();
+  return sc;
+}
+
 function startSim(diffKey) {
   stopEverything();
   if (!aiAvailable()) {
@@ -2163,7 +2220,7 @@ function startSim(diffKey) {
     return;
   }
   const t = SMALLTALK[currentTrackKey];
-  const sc = t.scenes[Math.floor(Math.random() * t.scenes.length)];
+  const sc = pickScene(currentTrackKey);
   const diff = SIM_DIFF[diffKey] ? diffKey : (save.simDiff || "medium");
   sim = { trackKey: currentTrackKey, scene: sc, log: [], turns: 0, busy: false, rec: null, transcript: "", ended: false,
           interest: 50, result: null, peak: 50, diff, stalls: 0 };
@@ -2182,7 +2239,7 @@ function startSim(diffKey) {
   updateMeter(false);
   show("scr-sim");
   simSysNote(SIM_DIFF[diff].live
-    ? "🔥 HARD — no Reply button. The mic opens the moment they stop talking; answer straight away or they'll notice the silence."
+    ? `🔥 HARD — no Reply button. The mic opens the moment they stop talking. You get ${Math.round(SIM_DIFF[diff].graceMs / 1000)} seconds to take in what they said and start answering; go quiet past that and they'll notice.`
     : "They speak first. Reply out loud — real conversation rules apply.");
   simCharacterTurn(true);
 }
@@ -2349,14 +2406,19 @@ function liveTick() {
   const pct = Math.max(0, Math.min(100, (left / liveT.total) * 100));
   const fill = document.getElementById("liveBarFill");
   const status = document.getElementById("liveStatus");
+  // The window opens as reading time and only turns into pressure at the end, so the
+  // threshold is a duration, not a fraction — it stays right if graceMs changes.
+  const urgent = liveT.phase === "grace" && left <= (simDiff().urgeMs || 5000);
   if (fill) {
     fill.style.width = pct + "%";
-    fill.className = "live-bar-fill" + (liveT.phase === "grace" && pct < 45 ? " danger" : "");
+    fill.className = "live-bar-fill" + (urgent ? " danger" : "");
   }
   if (status && liveT.phase === "grace") {
     const secs = Math.max(0, Math.ceil(left / 1000));
-    status.textContent = "🎙️ SPEAK NOW — " + secs + "s";
-    status.className = "live-status" + (pct < 45 ? " urge" : "");
+    status.textContent = urgent
+      ? "🎙️ SPEAK NOW — " + secs + "s"
+      : "👀 Your turn — take it in · " + secs + "s";
+    status.className = "live-status" + (urgent ? " urge" : "");
   }
   if (left <= 0) {
     if (liveT.phase === "grace") { liveClear(); simStall(); }
@@ -2452,7 +2514,7 @@ function renderSimControls() {
   if (simDiff().live && sim.recording) {
     // hard mode: no buttons — a countdown you have to talk over
     c.innerHTML = `<div class="live-hud">
-        <div class="live-status" id="liveStatus">🎙️ SPEAK NOW</div>
+        <div class="live-status" id="liveStatus">👀 Your turn</div>
         <div class="live-bar"><div class="live-bar-fill" id="liveBarFill"></div></div>
         <div class="live-hint">Stop talking for a moment and it sends automatically${sim.turns >= 3 ? ' · <a href="#" onclick="simEnd();return false;" style="color:var(--muted)">end &amp; get coached</a>' : ""}</div>
       </div>`;
@@ -2634,7 +2696,7 @@ Be honest, specific, never generic.`;
     out.innerHTML = banner + '<div class="ai-coach-head"><h3>🧠 Coach\'s verdict</h3></div>' +
       renderMd(clean) +
       (score10 !== null ? `<div style="margin-top:12px;font-weight:800;font-size:18px;">Social skill: ${score10}/10${deltaHtml} <span style="color:var(--good);font-size:14px;">+${xp} XP</span></div>` : `<div id="xpGain" style="margin-top:10px;">+${xp} XP</div>`) +
-      (fix ? `<div style="margin-top:8px;padding:10px 14px;border-left:4px solid var(--accent-2);background:rgba(0,212,255,.07);border-radius:0 10px 10px 0;font-size:14px;"><b style="color:var(--accent-2)">Next conversation:</b> ${escapeHtml(fix)}</div>` : "") +
+      (fix ? `<div style="margin-top:8px;padding:10px 14px;border-left:4px solid var(--accent-2);background:rgba(127,168,255,.07);border-radius:0 10px 10px 0;font-size:14px;"><b style="color:var(--accent-2)">Next conversation:</b> ${escapeHtml(fix)}</div>` : "") +
       '<div style="display:flex;gap:10px;margin-top:14px;"><button class="btn" onclick="startSim()">🔁 New conversation</button></div>';
   } catch (e) {
     out.innerHTML = '<div class="ai-coach-head"><h3>🧠 Coach\'s verdict</h3></div><span style="color:var(--bad)">⚠️ ' + escapeHtml(e.message) + '</span> <button class="btn ghost" style="margin-left:8px;padding:8px 14px;font-size:13px;" onclick="simEndRetry()">Retry</button>';
@@ -2668,7 +2730,7 @@ function loadSave() {
 function defaultSave() {
   return { xp:0, rounds:0, streak:0, lastPlayDay:null, history:[], badges:{}, modesPlayed:{}, lessonsDone:[],
            coachLog:[], baseline:null, baselineCoach:null, realPreps:[], dailyDone:null,
-           simTrack:"everyday", simDiff:"medium" };
+           simTrack:"everyday", simDiff:"medium", recentScenes:{} };
 }
 function persist() { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }
 
@@ -3508,7 +3570,7 @@ function showStats() {
     ? `<div style="color:var(--muted);font-size:13px;margin-bottom:8px;">Your first ${save.baseline ? "3 rounds (" + save.baseline.d + ")" : "rounds"} vs your last 3.</div><div id="bestGridLike" style="display:grid;gap:8px;">${rows.join("")}</div>`
     : `<div style="color:var(--muted);font-size:14px;">Play at least 3 mic rounds — your first ones get frozen as a baseline, and this card shows exactly how far you've come since.</div>`;
   if (lastFix && lastFix.fix) {
-    ibHtml += `<div style="margin-top:12px;padding:10px 14px;border-left:4px solid var(--accent-2);background:rgba(0,212,255,.07);border-radius:0 10px 10px 0;font-size:14px;"><b style="color:var(--accent-2)">🎯 Coach's current focus:</b> ${escapeHtml(lastFix.fix)}</div>`;
+    ibHtml += `<div style="margin-top:12px;padding:10px 14px;border-left:4px solid var(--accent-2);background:rgba(127,168,255,.07);border-radius:0 10px 10px 0;font-size:14px;"><b style="color:var(--accent-2)">🎯 Coach's current focus:</b> ${escapeHtml(lastFix.fix)}</div>`;
   }
   ib.innerHTML = ibHtml;
 
@@ -3524,7 +3586,7 @@ function showStats() {
     sp.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none">
       <polyline points="${pts.join(" ")}" fill="none" stroke="url(#g2)" stroke-width="2.5" stroke-linejoin="round"/>
       <defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#00d4ff"/></linearGradient></defs>
+        <stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#7fa8ff"/></linearGradient></defs>
     </svg>`;
   } else {
     sp.innerHTML = `<div style="color:var(--muted);font-size:14px;">Play a couple of rounds and your improvement curve appears here.</div>`;
@@ -3569,7 +3631,7 @@ function confetti() {
   const cv = document.getElementById("confetti");
   const ctx = cv.getContext("2d");
   cv.width = innerWidth; cv.height = innerHeight;
-  const colors = ["#7c5cff", "#00d4ff", "#2dd4a7", "#ffb020", "#ff5470", "#ffffff"];
+  const colors = ["#7c5cff", "#7fa8ff", "#2dd4a7", "#ffb020", "#ff5470", "#ffffff"];
   const parts = Array.from({ length: 140 }, () => ({
     x: Math.random() * cv.width, y: -20 - Math.random() * cv.height * .4,
     vx: (Math.random() - .5) * 2.4, vy: 2.2 + Math.random() * 3.4,
