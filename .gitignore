@@ -1,0 +1,13 @@
+# Secrets. LICENSE_SECRET mints Pro licences and ANTHROPIC_API_KEY is billable —
+# neither may ever be committed. Leaking LICENSE_SECRET means anyone can issue
+# themselves unlimited Pro keys, and the only remedy is rotating it, which
+# invalidates every paying customer's key at once.
+.env
+.env.*
+!.env.example
+
+node_modules/
+.vercel/
+.DS_Store
+Thumbs.db
+*.log

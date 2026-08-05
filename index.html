@@ -88,13 +88,51 @@
     box-shadow: 0 6px 22px rgba(0, 0, 0, .45);
   }
   #topbar .stats { display: flex; gap: 8px; flex-wrap: wrap; }
-  #logo { font-size: 22px; font-weight: 800; letter-spacing: .3px; cursor: pointer; }
+  #logo { font-size: 20px; font-weight: 800; letter-spacing: .3px; cursor: pointer; white-space: nowrap; }
   #logo span { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  #xpbarWrap { height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden; margin-top: 10px; border: 1px solid var(--line); }
+
+  /* nav: links centre-right, actions hard right */
+  #topbar .nav-links { display: flex; gap: clamp(12px, 2vw, 26px); margin-left: auto; }
+  #topbar .nav-links a {
+    color: var(--muted); font-size: clamp(11px, 1.05vw, 13.5px); cursor: pointer;
+    white-space: nowrap; transition: color .18s ease;
+  }
+  #topbar .nav-links a:hover { color: var(--text); }
+  #topbar .nav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+  #topbar .icon-pill { cursor: pointer; padding: 7px 11px; font-size: 14px; line-height: 1; }
+  #topbar .nav-cta {
+    flex: none; white-space: nowrap; border: 0; cursor: pointer; color: #fff;
+    padding: 9px 18px; border-radius: 999px;
+    font: 700 clamp(11px, 1.05vw, 13.5px)/1 inherit;
+    background: linear-gradient(180deg, #8f7bff, #5b46d6);
+    box-shadow: 0 6px 20px rgba(124,92,255,.42), inset 0 1px 0 rgba(255,255,255,.24);
+    transition: transform .16s ease, box-shadow .16s ease;
+  }
+  #topbar .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 9px 26px rgba(124,92,255,.55), inset 0 1px 0 rgba(255,255,255,.3); }
+  @media (max-width: 720px) { #topbar .nav-links { display: none; } }
+
+  #xpbarWrap { height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden; border: 1px solid var(--line); }
   #xpbar { height: 100%; width: 0%; background: var(--grad); border-radius: 99px; transition: width .6s ease; }
 
+  /* progress strip at the foot of home */
+  .prog-strip {
+    display: flex; align-items: center; gap: clamp(16px, 2.6vw, 30px); flex-wrap: wrap;
+    padding: clamp(14px, 1.8vw, 20px) clamp(16px, 2.2vw, 26px); border-radius: 18px;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(38,20,64,.90), rgba(20,12,36,.84));
+    backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%);
+    box-shadow: 0 14px 38px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.07);
+  }
+  .prog-strip .metric { display: flex; flex-direction: column; gap: 2px; }
+  .prog-strip .n { font-size: clamp(17px, 1.9vw, 23px); font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .prog-strip .k { font-size: 10.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+  .prog-xp { flex: 1; min-width: 170px; }
+  .prog-xp .xp-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+  .prog-xp .v { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .prog-xp .v b { color: var(--text); }
+
   /* ---------- home ---------- */
-  .hero { text-align: center; padding: 26px 10px 30px; }
+  .hero { text-align: center; padding: clamp(30px, 7vh, 74px) 10px clamp(24px, 4.5vh, 46px); }
   .eyebrow {
     display: inline-flex; align-items: center; gap: 7px; margin-bottom: 20px;
     padding: 6px 15px 6px 11px; border-radius: 999px; font-size: 12px; font-weight: 600;
@@ -109,6 +147,9 @@
   #modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(225px, 1fr)); gap: 14px; margin-top: 10px; }
   .mode-card {
     text-align: left; cursor: pointer; position: relative; overflow: hidden;
+    /* a <button> does not inherit colour or font — without these the headings
+       inside fall back to the browser's black on a near-black card */
+    color: var(--text); font: inherit;
     background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 20px;
     transition: transform .15s ease, border-color .15s ease, box-shadow .15s;
   }
@@ -117,7 +158,132 @@
   .mode-card h3 { margin: 10px 0 6px; font-size: 19px; }
   .mode-card p { color: var(--muted); font-size: 14px; line-height: 1.5; }
   .mode-card .meta { margin-top: 12px; font-size: 12px; font-weight: 700; color: var(--accent-2); letter-spacing: .5px; }
+
+  /* Quick Rounds take the mockup's card layout: one row of four, a meta chip at
+     the top, the mode's artwork bleeding down behind it, and the text anchored
+     to the bottom. Everything here is scoped to #modes on purpose — .mode-card
+     is also the daily card (full width) and the track cards, and neither of
+     those wants this shape. The cards scale rather than wrap so the row holds. */
+  #modes { grid-template-columns: repeat(4, 1fr); gap: clamp(8px, 1.1vw, 14px); }
+  #modes .mode-card {
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: clamp(236px, 29vw, 348px);
+    padding: clamp(11px, 1.15vw, 16px);
+    border-radius: clamp(13px, 1.4vw, 18px);
+  }
+  /* keep the gradient top edge and hover wash above the artwork */
+  #modes .mode-card::before { z-index: 3; }
+  #modes .mode-card::after  { z-index: 1; }
+
+  #modes .art {
+    position: absolute; top: 0; left: 0; right: 0; height: 56%; z-index: 0; overflow: hidden;
+    background: radial-gradient(125% 95% at 50% 0%, var(--tint, rgba(124,92,255,.18)), transparent 74%);
+    transition: transform .35s cubic-bezier(.16,1,.3,1);
+  }
+  #modes .mode-card:hover .art { transform: scale(1.055); }
+  #modes .art svg { width: 100%; height: 100%; display: block; }
+  #modes .art::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 26%, rgba(18,10,34,.60) 64%, rgba(18,10,34,.95) 100%);
+  }
+
+  #modes .chip {
+    position: relative; z-index: 2; align-self: flex-start;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: clamp(4px, .5vw, 6px) clamp(8px, .9vw, 11px); border-radius: 999px;
+    border: 1px solid rgba(190,150,255,.24); background: rgba(20,12,36,.66);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    font-size: clamp(9px, .82vw, 11px); font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; color: #ddd4f5; white-space: nowrap;
+  }
+  #modes .chip .ce { font-size: 1.2em; line-height: 1; }
+
+  #modes .mc-body { position: relative; z-index: 2; }
+  #modes .mode-card h3 { margin: 0 0 5px; font-size: clamp(13px, 1.5vw, 19px); line-height: 1.22; }
+  #modes .mode-card p { margin: 0; font-size: clamp(10px, 1vw, 13.5px); line-height: 1.45; }
+  #modes .mode-card .meta {
+    margin-top: clamp(6px, .7vw, 10px);
+    font-size: clamp(8.5px, .78vw, 10.5px); letter-spacing: .5px; text-transform: uppercase;
+  }
+
+  @media (max-width: 620px) {
+    #modes { grid-template-columns: repeat(2, 1fr); }
+    #modes .mode-card { min-height: 210px; }
+    #modes .mode-card h3 { font-size: 15px; }
+    #modes .mode-card p { font-size: 12px; }
+  }
+
   #homeFooter { display: flex; justify-content: center; gap: 10px; margin-top: 22px; }
+
+  /* ---------- paywall ---------- */
+  .free-pill, .pro-pill {
+    font-size: 11.5px; font-weight: 700; letter-spacing: .02em; white-space: nowrap;
+    padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line);
+    background: rgba(20,12,36,.7); color: var(--muted);
+  }
+  .free-pill.out { border-color: rgba(255,176,32,.45); color: var(--warn); }
+  .free-pill a { color: var(--warn); cursor: pointer; text-decoration: underline; }
+  .pro-pill { border-color: rgba(45,212,167,.45); color: var(--good); }
+  @media (max-width: 720px) { #freeLeft { display: none; } }
+
+  #paywall {
+    display: none; position: fixed; inset: 0; z-index: 60;
+    align-items: center; justify-content: center; padding: 20px;
+    background: rgba(6,3,14,.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  }
+  .pw-card {
+    position: relative; width: 100%; max-width: 440px; text-align: left;
+    padding: 26px; border-radius: 20px;
+    border: 1px solid rgba(190,150,255,.28);
+    background: linear-gradient(180deg, rgba(44,24,74,.97), rgba(20,12,36,.97));
+    box-shadow: 0 30px 80px rgba(0,0,0,.6);
+    animation: pop .28s cubic-bezier(.16,1,.3,1);
+  }
+  .pw-x {
+    position: absolute; top: 14px; right: 14px; width: 30px; height: 30px;
+    border-radius: 50%; border: 1px solid var(--line); background: rgba(255,255,255,.06);
+    color: var(--muted); cursor: pointer; font-size: 13px; line-height: 1;
+  }
+  .pw-x:hover { color: var(--text); }
+  .pw-price { display: flex; align-items: baseline; gap: 6px; margin: 16px 0 6px; }
+  .pw-amt {
+    font-size: 40px; font-weight: 800; letter-spacing: -.03em;
+    background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .pw-per { color: var(--muted); font-size: 14px; font-weight: 600; }
+  .pw-list { list-style: none; margin: 14px 0 18px; display: grid; gap: 8px; }
+  .pw-list li { position: relative; padding-left: 24px; font-size: 14.5px; line-height: 1.45; }
+  .pw-list li::before { content: "✓"; position: absolute; left: 0; color: var(--good); font-weight: 800; }
+
+  /* ---------- crash course: study screen ---------- */
+  #studyStatus { text-align: center; color: var(--muted); font-size: 14px; margin-top: 10px; min-height: 20px; }
+  #studyBody { margin-top: 18px; text-align: left; font-size: 16px; line-height: 1.7; }
+  #studyBody p { margin-bottom: 14px; }
+  #studyBody p:last-child { margin-bottom: 0; }
+  #studyBody .sb-hook {
+    color: var(--accent-2); font-weight: 700; font-size: 14px;
+    letter-spacing: .3px; margin-bottom: 16px; padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  /* the controls follow you down a long read */
+  #studyBar {
+    position: sticky; bottom: 12px; z-index: 5;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: space-between;
+    margin-top: 18px; padding: 14px 18px; border-radius: 16px;
+    border: 1px solid rgba(190,150,255,.22);
+    background: linear-gradient(180deg, rgba(38,20,64,.94), rgba(20,12,36,.92));
+    backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%);
+    box-shadow: 0 14px 38px rgba(0,0,0,.5);
+  }
+  .study-clock { display: flex; flex-direction: column; gap: 2px; }
+  .study-clock #studyTime {
+    font-size: 30px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+    background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .study-clock small { font-size: 10.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+  .study-clock.low #studyTime { background: none; color: var(--bad); }
+  .study-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  @media (max-width: 560px) { .study-actions { width: 100%; } .study-actions .btn { flex: 1; } }
 
   /* ---------- prep / round ---------- */
   .roundWrap { text-align: center; }
@@ -223,6 +389,7 @@
   .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
   .feature-card {
     text-align: left; cursor: pointer; position: relative; overflow: hidden;
+    color: var(--text); font: inherit;   /* same button-inheritance trap as .mode-card */
     border: 1px solid var(--line); border-radius: 18px; padding: 22px;
     background: rgba(20,25,39,.66); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     transition: transform .15s ease, border-color .15s ease, box-shadow .15s;
@@ -239,11 +406,25 @@
     font-size: 28px; border-radius: 15px; margin-bottom: 14px;
     background: var(--fc-badge-bg, rgba(124,92,255,.15)); border: 1px solid var(--fc-badge-bd, rgba(124,92,255,.35));
   }
+  /* the mockup's treatment: a thin line icon in the badge and large faint art
+     bleeding out of the top-right corner */
+  .feature-card { position: relative; overflow: hidden; }
+  .feature-card .fc-badge svg { width: 46%; height: 46%; }
+  .feature-card .fc-art {
+    position: absolute; right: -6%; top: -8%; width: 46%; opacity: .5; pointer-events: none;
+    color: var(--fc-meta, var(--accent-2));
+    transition: transform .35s cubic-bezier(.16,1,.3,1), opacity .3s ease;
+  }
+  .feature-card:hover .fc-art { transform: translate(-4px, 4px) scale(1.06); opacity: .72; }
+  .feature-card .fc-art svg { width: 100%; height: auto; display: block; }
+  .feature-card h3, .feature-card p, .feature-card .meta, .feature-card .fc-badge { position: relative; z-index: 1; }
   .feature-card h3 { font-size: 20px; margin-bottom: 8px; }
   .feature-card p { color: var(--muted); font-size: 14px; line-height: 1.55; }
   .feature-card .meta { margin-top: 14px; font-size: 12px; font-weight: 700; color: var(--fc-meta, var(--accent-2)); letter-spacing: .5px; }
   .feature-card.prep { --fc-glow: rgba(124,92,255,.18); --fc-badge-bg: rgba(124,92,255,.15); --fc-badge-bd: rgba(124,92,255,.4); --fc-meta: var(--accent); }
   .feature-card.prep:hover { border-color: var(--accent); box-shadow: 0 12px 34px rgba(124,92,255,.16); }
+  .feature-card.learn { --fc-glow: rgba(45,212,167,.16); --fc-badge-bg: rgba(45,212,167,.12); --fc-badge-bd: rgba(45,212,167,.35); --fc-meta: var(--good); }
+  .feature-card.learn:hover { border-color: var(--good); box-shadow: 0 12px 34px rgba(45,212,167,.14); }
   .feature-card.talk { --fc-glow: rgba(127,168,255,.16); --fc-badge-bg: rgba(127,168,255,.12); --fc-badge-bd: rgba(127,168,255,.35); --fc-meta: var(--accent-2); }
   .feature-card.talk:hover { border-color: var(--accent-2); box-shadow: 0 12px 34px rgba(127,168,255,.14); }
 
@@ -577,23 +758,38 @@
 <canvas id="confetti"></canvas>
 <div id="app">
 
+  <!-- Capsule nav. The streak/level/XP readouts moved to the progress strip at
+       the foot of the home screen; they keep their ids so renderTopbar() still
+       finds them (screens are hidden with display:none, never removed). -->
   <div id="topbar">
     <div id="logo" onclick="goHome()">🎙️ Quick<span>Wit</span></div>
-    <div class="stats">
-      <div class="pill">🔥 <b id="streakNum">0</b>&nbsp;day streak</div>
-      <div class="pill">⭐ Level <b id="levelNum">1</b></div>
-      <div class="pill">🏅 <b id="xpNum">0</b>&nbsp;XP</div>
-      <button class="pill" style="cursor:pointer;" onclick="showSettings()" title="Settings">⚙️</button>
+    <nav class="nav-links">
+      <a onclick="startTraining()">Quick rounds</a>
+      <a onclick="showPrep()">Deep practice</a>
+      <a onclick="showStats()">Progress</a>
+    </nav>
+    <div class="nav-right">
+      <span id="freeLeft"></span>
+      <button class="pill icon-pill" id="muteBtn" onclick="toggleMute()" title="Sound on — click to mute" aria-pressed="true">🔊</button>
+      <button class="pill icon-pill" onclick="showSettings()" title="Settings">⚙️</button>
+      <button class="nav-cta" onclick="startTraining()">Start training</button>
     </div>
   </div>
-  <div id="xpbarWrap"><div id="xpbar"></div></div>
 
   <div id="micBanner"></div>
+
+  <!-- paywall: shown when the SERVER returns 402, never decided in the browser -->
+  <div id="paywall" onclick="if(event.target===this)closePaywall()">
+    <div class="pw-card">
+      <button class="pw-x" onclick="closePaywall()" title="Close">✕</button>
+      <h2 style="font-size:24px;margin-bottom:4px;">Keep the coach talking</h2>
+      <div id="paywallBody"></div>
+    </div>
+  </div>
 
   <!-- ============ HOME ============ -->
   <section id="scr-home" class="screen active">
     <div class="hero">
-      <span class="eyebrow"><i></i>Live AI coach</span>
       <h1>Speak on the spot.<br><em>Get scarily good at it.</em></h1>
       <p>Pick a challenge, think for a few seconds, then talk. Your mic listens and scores you like a coach.</p>
     </div>
@@ -620,21 +816,85 @@
     <div class="section-head"><h2>🎓 Deep Practice</h2><span class="sh-sub">Guided, AI-powered training</span></div>
     <div class="feature-grid">
       <button class="feature-card prep" onclick="showPrep()">
-        <span class="fc-badge">🎯</span>
+        <span class="fc-art" aria-hidden="true">
+          <svg viewBox="0 0 140 140">
+            <circle cx="70" cy="70" r="60" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="1.2"/>
+            <circle cx="70" cy="70" r="42" fill="none" stroke="currentColor" stroke-opacity=".38" stroke-width="1.2"/>
+            <circle cx="70" cy="70" r="24" fill="none" stroke="currentColor" stroke-opacity=".5" stroke-width="1.2"/>
+            <circle cx="70" cy="70" r="6" fill="currentColor" fill-opacity=".8"/>
+            <path d="M70 4 v18 M70 118 v18 M4 70 h18 M118 70 h18" stroke="currentColor" stroke-opacity=".45" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="fc-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+            <circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="12" r="4"></circle>
+            <circle cx="12" cy="12" r="1" fill="currentColor"></circle>
+          </svg>
+        </span>
         <h3>Prep for Real Life</h3>
         <p>Got an interview, a speech, a pitch, a date? Describe it — the AI builds the exact hard moment you're afraid of, you rehearse it out loud, and the coach preps you for the real thing.</p>
         <div class="meta">YOUR SITUATION · AI-BUILT CHALLENGE</div>
       </button>
+      <button class="feature-card learn" onclick="startCrashCourse()">
+        <span class="fc-art" aria-hidden="true">
+          <svg viewBox="0 0 140 140">
+            <path d="M22 34h38a10 10 0 0 1 10 10v66a10 10 0 0 0-10-10H22z" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M118 34H80a10 10 0 0 0-10 10v66a10 10 0 0 1 10-10h38z" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M70 44v66" stroke="currentColor" stroke-opacity=".4" stroke-width="1.4"/>
+            <g stroke="currentColor" stroke-opacity=".35" stroke-width="1.3" stroke-linecap="round">
+              <path d="M32 52h28M32 64h28M32 76h20M80 52h28M80 64h28M80 76h20"/>
+            </g>
+            <circle cx="70" cy="22" r="7" fill="none" stroke="currentColor" stroke-opacity=".5" stroke-width="1.5"/>
+            <path d="M70 6v5M58 12l3 4M82 12l-3 4" stroke="currentColor" stroke-opacity=".45" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="fc-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 5.5A1.5 1.5 0 0 1 4.5 4H10a2.5 2.5 0 0 1 2 1 2.5 2.5 0 0 1 2-1h5.5A1.5 1.5 0 0 1 21 5.5v12a1.5 1.5 0 0 1-1.5 1.5H14a2.5 2.5 0 0 0-2 1 2.5 2.5 0 0 0-2-1H4.5A1.5 1.5 0 0 1 3 17.5z"></path>
+            <path d="M12 5v14"></path>
+          </svg>
+        </span>
+        <h3>Crash Course</h3>
+        <p>Read something you've never learned — how noise-cancelling headphones work, why a historical event turned out the way it did — then teach it back in 60 seconds from memory. No notes.</p>
+        <div class="meta">10 MIN STUDY · 60 SEC TEACH-BACK</div>
+      </button>
       <button class="feature-card talk" onclick="showTracks()">
-        <span class="fc-badge">🗣️</span>
+        <span class="fc-art" aria-hidden="true">
+          <svg viewBox="0 0 140 140">
+            <path d="M18 40a12 12 0 0 1 12-12h52a12 12 0 0 1 12 12v24a12 12 0 0 1-12 12H48L28 92V76h-2a8 8 0 0 1-8-8z"
+                  fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M56 96a14 14 0 0 0 14 12h30l20 16v-34a14 14 0 0 0-14-14h-6"
+                  fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="1.6" stroke-linejoin="round"/>
+            <g fill="currentColor" fill-opacity=".55"><circle cx="44" cy="52" r="3.4"/><circle cx="58" cy="52" r="3.4"/><circle cx="72" cy="52" r="3.4"/></g>
+          </svg>
+        </span>
+        <span class="fc-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h8A2.5 2.5 0 0 1 16 6.5v4A2.5 2.5 0 0 1 13.5 13H8l-4 3z"></path>
+            <path d="M9 16.2c.3 1 1.3 1.8 2.5 1.8H16l4 3v-8.5A2.5 2.5 0 0 0 17.5 10"></path>
+          </svg>
+        </span>
         <h3>Small Talk Trainer</h3>
         <p>Lessons, drills and a live AI conversation partner. Everyday chat, dates, and business networking — become the person who's easy to talk to.</p>
         <div class="meta">LESSONS · DRILLS · LIVE SIMULATOR</div>
       </button>
     </div>
 
+    <!-- progress strip: the stats that used to sit in the topbar -->
+    <div class="section-head"><h2>📈 Your Progress</h2><span class="sh-sub">Come back daily — the streak keeps you sharp</span></div>
+    <div class="prog-strip">
+      <div class="metric"><span class="n" id="streakNum">0</span><span class="k">Day streak</span></div>
+      <div class="metric"><span class="n" id="levelNum">1</span><span class="k">Level</span></div>
+      <div class="metric"><span class="n" id="homeRounds">0</span><span class="k">Rounds</span></div>
+      <div class="metric"><span class="n" id="homeAvg">–</span><span class="k">Avg score</span></div>
+      <div class="prog-xp">
+        <div class="xp-top"><span class="k">Next level</span><span class="v"><b id="xpNum">0</b> XP</span></div>
+        <div id="xpbarWrap"><div id="xpbar"></div></div>
+      </div>
+    </div>
+
     <div id="homeFooter">
-      <button class="btn ghost" onclick="showStats()">📈 My Progress</button>
+      <button class="btn ghost" onclick="showStats()">📈 Full progress</button>
     </div>
   </section>
 
@@ -655,6 +915,21 @@
         <button class="btn ghost" onclick="clearKey()">🗑️ Remove</button>
       </div>
       <div id="keyStatus"></div>
+    </div>
+
+    <div class="card" style="text-align:left;margin-top:14px;">
+      <h3 style="font-size:16px;margin-bottom:6px;">★ Pro licence</h3>
+      <p style="color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:12px;">
+        Paid for Pro? Paste the licence key from your receipt email. It unlocks unlimited
+        AI coaching, Crash Course, Real-Life Prep and the live simulator on this device.
+      </p>
+      <input id="licenseInput" class="keyInput" type="text" placeholder="QW-…" autocomplete="off" spellcheck="false">
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+        <button class="btn" onclick="saveLicense()">💾 Activate</button>
+        <button class="btn ghost" onclick="document.getElementById('licenseInput').value='';saveLicense()">🗑️ Remove</button>
+        <button class="btn ghost" onclick="showPaywall()">See Pro</button>
+      </div>
+      <div id="licenseStatus" style="font-size:14px;margin-top:10px;min-height:20px;"></div>
     </div>
     <div style="display:flex;justify-content:center;margin-top:20px;">
       <button class="btn ghost" onclick="goHome()">← Back</button>
@@ -754,6 +1029,29 @@
     <div class="card md" id="simCoachOut" style="display:none;"></div>
     <div style="display:flex;justify-content:center;gap:10px;margin-top:18px;">
       <button class="btn ghost" onclick="showLessons(currentTrackKey)">← Exit simulator</button>
+    </div>
+  </section>
+
+  <!-- ============ CRASH COURSE: STUDY ============ -->
+  <section id="scr-study" class="screen">
+    <div class="modeTag" style="text-align:center;">🧠 CRASH COURSE</div>
+    <h2 id="studyTitle" style="text-align:center;margin-top:6px;font-size:24px;">Finding you something to learn…</h2>
+    <div id="studyStatus"></div>
+    <div class="card" id="studyBody" style="display:none;"></div>
+
+    <div id="studyBar" style="display:none;">
+      <div class="study-clock">
+        <span id="studyTime">10:00</span>
+        <small>left to study</small>
+      </div>
+      <div class="study-actions">
+        <button class="btn" onclick="beginExplain()">🎤 I'm ready — explain it now</button>
+        <button class="btn ghost" onclick="extendStudy()">+5 more minutes</button>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:center;margin-top:18px;">
+      <button class="btn ghost" onclick="goHome()">← Back</button>
     </div>
   </section>
 
@@ -1010,6 +1308,10 @@ const MODES = {
     emoji: "📅", name: "Daily Challenge", tag: "DAILY CHALLENGE",
     desc: "", meta: "", hidden: true,   // one rotating scenario per day
   },
+  explain: {
+    emoji: "🧠", name: "Crash Course", tag: "CRASH COURSE",
+    desc: "", meta: "", hidden: true,   // reached from Deep Practice, not the quick grid
+  },
 };
 
 /* ------------------------- AI coaching prompt -------------------------
@@ -1094,6 +1396,7 @@ function buildCoachPrompt(a) {
   else if (round.modeKey === "real") challengeText = `${round.real.ch.scene || ""} ${round.real.ch.task}`.trim();
   else if (round.modeKey === "weak") challengeText = round.weak.ch.task;
   else if (round.modeKey === "daily") challengeText = round.daily.task;
+  else if (round.modeKey === "explain") challengeText = `Teach back, from memory: "${round.crash.title}".`;
 
   const rubric = round.modeKey === "drill"
     ? `MODE: Small talk drill — the player just studied the lesson "${round.drill.lesson.title}" (${SMALLTALK[round.drill.trackKey].name} track) and is practicing that ONE technique.
@@ -1112,6 +1415,32 @@ Judge ONLY whether they executed that fix. Everything else is secondary — even
     : round.modeKey === "daily"
     ? `MODE: DAILY CHALLENGE — "${round.daily.name}". The scenario: ${round.daily.task}
 ${round.daily.r}`
+    : round.modeKey === "explain"
+    ? `MODE: CRASH COURSE — the player read the explainer below, then taught it back in 60 seconds FROM MEMORY. No notes, nothing on screen while they spoke. You have the source; they did not.
+
+=== THE SOURCE MATERIAL THEY STUDIED ===
+${round.crash.title}
+
+${round.crash.body}
+=== END OF SOURCE ===
+
+Score two things, weighted 60/40. State both as X/10 in your verdict.
+
+UNDERSTANDING — 60%. This is the main event. Check what they said AGAINST the source:
+- Did they convey the actual MECHANISM — how and why the thing works — or only surface facts about it?
+- Name any statement that CONTRADICTS the source. Getting the causality backwards is the worst failure here; quote their exact words and give the correction.
+- Name the single most important thing they left out, if anything.
+- Distinguish the two failure modes sharply: forgetting a minor detail is fine and costs almost nothing; misunderstanding the core idea is fatal even if they sounded fluent.
+- Reward a good analogy or reframing that is NOT in the source — inventing one is the strongest evidence a person actually understood the material rather than memorised it.
+- Punish parroted jargon: technical terms reused from the source but never defined, and clearly not understood, score badly no matter how confident they sounded.
+
+CLARITY — 40%. Judge as a listener who has never seen the source:
+- Could you follow it start to finish without prior knowledge?
+- Did they set up what the thing IS before explaining how it works?
+- Was every term they used either defined or plain English?
+- Did the explanation run in a sensible order, or jump around?
+
+They were told to explain it to anyone, so assume a smart adult with no background in the subject. Do not reward verbatim recall — reward a person who clearly understood it and rebuilt it in their own words.`
     : MODE_RUBRIC[round.modeKey];
 
   // per-segment so rapid-fire's 3 answers and debate's 2 sides stay separated
@@ -1191,11 +1520,109 @@ function getApiKey() { return localStorage.getItem(API_KEY_STORE) || ""; }
    /api/claude holds the owner's key server-side so visitors never need one.
    Locally / on plain static hosting that endpoint 404s and we fall back to
    the user's own pasted key. */
+/* ------------------------- paywall (client side) -------------------------
+   None of this is a security boundary. The server decides entitlement on every
+   call and answers 402 when the free allowance is gone; everything here just
+   makes that decision visible so people aren't surprised by it. */
+const LICENSE_KEY_STORE = "qw_license";
+let isPro = false;
+let freeLeft = null;            // null until the server tells us
+let upgradeUrl = "";
+
+function getLicense() { try { return localStorage.getItem(LICENSE_KEY_STORE) || ""; } catch (e) { return ""; } }
+function setLicense(v) { try { v ? localStorage.setItem(LICENSE_KEY_STORE, v) : localStorage.removeItem(LICENSE_KEY_STORE); } catch (e) {} }
+
+async function checkLicense(quiet) {
+  const key = getLicense();
+  if (!key) { isPro = false; renderFreeLeft(); return false; }
+  try {
+    const r = await fetch("/api/license", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ key }),
+    });
+    const d = await r.json().catch(() => null);
+    isPro = !!(d && d.pro);
+    proExpires = (d && d.expires) || null;
+  } catch (e) { isPro = false; }
+  renderFreeLeft();
+  if (!quiet) renderLicenseStatus();
+  return isPro;
+}
+let proExpires = null;
+
+function renderFreeLeft() {
+  const el = document.getElementById("freeLeft");
+  if (!el) return;
+  if (isPro) { el.innerHTML = '<span class="pro-pill">★ Pro</span>'; return; }
+  if (freeLeft === null) { el.textContent = ""; return; }
+  el.innerHTML = freeLeft > 0
+    ? `<span class="free-pill">${freeLeft} free AI ${freeLeft === 1 ? "round" : "rounds"} left today</span>`
+    : `<span class="free-pill out">Free rounds used — <a onclick="showPaywall()">go Pro</a></span>`;
+}
+
+// escapeHtml stops attribute breakout but not `javascript:` — and this is a
+// payment link, so pin it to http(s) as well
+function safeUrl(u) { return /^https?:\/\//i.test(String(u || "")) ? String(u) : ""; }
+
+function showPaywall(info) {
+  if (info && info.upgradeUrl) upgradeUrl = safeUrl(info.upgradeUrl);
+  const n = (info && info.free) || 3;
+  document.getElementById("paywallBody").innerHTML = `
+    <p style="color:var(--muted);font-size:15px;line-height:1.6;">
+      You get <b>${n} AI-coached rounds a day</b> for free, and they reset tomorrow.
+      Quick rounds with pace, filler and tone scoring stay free and unlimited — always.
+    </p>
+    <div class="pw-price"><span class="pw-amt">€4.99</span><span class="pw-per">/ month</span></div>
+    <ul class="pw-list">
+      <li>Unlimited AI coach verdicts</li>
+      <li>Crash Course — learn something, then teach it back</li>
+      <li>Prep for Real Life — rehearse your actual interview or speech</li>
+      <li>The live conversation simulator</li>
+      <li>Cancel any time</li>
+    </ul>
+    ${upgradeUrl
+      ? `<a class="btn" style="text-decoration:none;display:block;text-align:center;" href="${escapeHtml(upgradeUrl)}" target="_blank" rel="noopener">Go Pro — €4.99/month</a>`
+      : `<div style="color:var(--warn);font-size:14px;">Checkout isn't configured yet (set UPGRADE_URL).</div>`}
+    <p style="color:var(--muted-dim);font-size:13px;margin-top:14px;text-align:center;">
+      Already paid? <a onclick="closePaywall();showSettings();" style="color:var(--accent-2);cursor:pointer;">Enter your licence key</a>
+    </p>`;
+  document.getElementById("paywall").style.display = "flex";
+}
+function closePaywall() { document.getElementById("paywall").style.display = "none"; }
+
+async function saveLicense() {
+  const v = document.getElementById("licenseInput").value.trim();
+  setLicense(v);
+  const st = document.getElementById("licenseStatus");
+  st.textContent = "Checking…"; st.style.color = "var(--muted)";
+  await checkLicense(true);
+  renderLicenseStatus();
+}
+function renderLicenseStatus() {
+  const st = document.getElementById("licenseStatus");
+  if (!st) return;
+  if (!getLicense()) { st.textContent = "No licence — you're on the free tier."; st.style.color = "var(--muted)"; return; }
+  if (isPro) {
+    st.textContent = "★ Pro active" + (proExpires ? " — renews/expires " + proExpires : "");
+    st.style.color = "var(--good)";
+  } else {
+    st.textContent = "That licence isn't valid or has expired.";
+    st.style.color = "var(--bad)";
+  }
+}
+
 let proxyAvailable = false;
 async function detectProxy() {
   try {
     const r = await fetch("/api/claude", { method: "GET" });
     proxyAvailable = r.ok;
+    const d = await r.json().catch(() => null);
+    if (d) {
+      if (d.upgradeUrl) upgradeUrl = safeUrl(d.upgradeUrl);
+      if (typeof d.free === "number" && freeLeft === null) { freeLeft = d.free; renderFreeLeft(); }
+    }
+    if (proxyAvailable) checkLicense(true);
   } catch (e) { proxyAvailable = false; }
 }
 function aiAvailable() { return !!getApiKey() || proxyAvailable || MOCK; }
@@ -1232,16 +1659,27 @@ async function callClaude({ system, messages, maxTokens = 1024, thinking = false
   }
 
   // proxy: the site owner's key stays on the server
+  const headers = { "content-type": "application/json" };
+  const lic = getLicense();
+  if (lic) headers["x-qw-license"] = lic;
   res = await fetch("/api/claude", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers,
     body: JSON.stringify({ system, messages, maxTokens, thinking }),
   });
   const data = await res.json().catch(() => null);
   if (!res.ok) {
+    // 402 is the paywall: the server decided, not the browser
+    if (res.status === 402) {
+      isPro = false;
+      showPaywall(data || {});
+      throw new Error((data && data.error) || "Free rounds used up for today.");
+    }
     if (res.status === 429) throw new Error(data && data.error ? data.error : "You've used today's free coaching — come back tomorrow, or add your own key in Settings (⚙️).");
     throw new Error(data && data.error ? data.error : `Coach unavailable (HTTP ${res.status})`);
   }
+  if (data && typeof data.pro === "boolean") isPro = data.pro;
+  if (data && typeof data.freeLeft === "number") { freeLeft = data.freeLeft; renderFreeLeft(); }
   return (data.text || "").trim();
 }
 
@@ -1252,6 +1690,7 @@ function mockClaude(kind) {
     reply: "Oh nice, I was wondering if the line was always this long — do you come here a lot?",
     challenge: '{"scene":"Final-round interview. The CTO closes your CV and leans back.","task":"\\"Honestly? We\'ve interviewed candidates with twice your experience. Why should we take the risk on you?\\"","sub":"Don\'t apologize for the gap — reframe it as hunger, then land ONE concrete proof.","seconds":60}',
     fixdrill: '{"task":"Pitch your own phone to an imaginary stranger for 35 seconds — and you MUST finish with one direct, unmissable ask for the sale.","sub":"Success = the last sentence is a confident ask, nothing after it.","seconds":35}',
+    crash: '{"title":"How noise-cancelling headphones work","hook":"They do not block sound — they add a second sound designed to erase the first.","body":"Sound travels as a pressure wave: the air alternately squeezes and thins, and your eardrum moves in step with it. A wave has a shape, and two waves that meet add together point by point. If one wave pushes exactly as hard as another pulls, the two cancel and the air stops moving. This is called destructive interference, and it is the whole trick.\\n\\nAn active noise-cancelling headphone carries a tiny microphone on the outside of each earcup. It listens to the noise heading for your ear, and a small processor calculates the exact opposite wave — same shape, same size, inverted. The speaker then plays that inverted wave on top of your music. Where the two overlap, the droning noise largely disappears while the music, which was never cancelled, survives untouched.\\n\\nThe reason it works far better on an aeroplane than in a cafe is timing. The processor has well under a millisecond to measure a wave and produce its mirror image. Low, steady sounds like engine rumble are easy: they repeat predictably, so the next stretch of the wave is essentially known in advance. A sudden clatter or a voice changes shape too fast, and by the time the opposite wave is ready the original has already moved on.\\n\\nThat is why noise cancelling feels like it removes the world underneath you but not the people around you. It is not a wall — it is a prediction, and it can only cancel the part of the noise it can see coming."}',
     simcoach: "**Verdict:** Friendly but you interviewed instead of conversing.\n\n**What worked:**\n- Good open questions early.\n\n**What didn't:**\n- You fired questions without sharing anything back.\n\n**Fix this first:** Use answer-plus — answer, add a detail of your own, hand it back.\n\n**Rewrite:** Instead of \"What's his name?\", try \"He's gorgeous — my sister has a retriever who eats her furniture. What's this one's name?\"\n\nSCORE: 5/10\nFIX: Share one detail about yourself before asking your next question.",
   };
   let out = canned[kind] || canned.coach;
@@ -1867,7 +2306,7 @@ CHALLENGES ALREADY PRACTICED (pick a genuinely different hard moment this time):
 ${given.map(g => "- " + g).join("\n")}` : ""}
 
 Reply with ONLY a JSON object — no markdown fences, no commentary — in exactly this shape:
-{"scene":"one short line setting the scene, second person, present tense","task":"the exact moment they must respond to RIGHT NOW — e.g. the interviewer's hardest question verbatim in quotes, the second the toast glass clinks, the investor's sharpest objection verbatim","sub":"one short line of tactical guidance for a strong answer","seconds":60}
+{"scene":"one short line setting the scene, second person, present tense","task":"the exact moment they must respond to RIGHT NOW — e.g. the interviewer's hardest question verbatim in quotes, the second the toast glass clinks, the investor's sharpest objection verbatim","sub":"one short line of tactical guidance for a strong answer","topic":"2-4 lowercase SUBJECT words a good answer will almost certainly say out loud — nouns from the situation itself, never words from your instruction. Each over 3 letters. Omit any word a strong answer might reasonably skip","seconds":60}
 
 Rules: be specific to THEIR description (use its details), realistically hard — the moment they are actually afraid of, not a softball. "seconds" between 45 and 90.`;
     const raw = await callClaude({ messages: [{ role: "user", content: gen }], maxTokens: 500, mockKind: "challenge" });
@@ -1901,62 +2340,244 @@ function startRealRound(ch, type, desc) {
     label: ch.task,
     sub: (ch.scene ? ch.scene + " — " : "") + (ch.sub || ""),
     seconds: ch.seconds,
-    topic: null,
+    topic: ch.topic || null,   // the model names the subject; null just drops the component
   }];
   runPrep();
 }
 
+/* ------------------------- CRASH COURSE -------------------------
+   Read an explainer about something you didn't know, then teach it back in
+   60 seconds from memory. No notes, and the text is off-screen while you talk:
+   the mode tests understanding, not recall. The coach is given the source, so
+   it can check what you said against what was actually true. */
+
+const CRASH_FIELDS = [
+  "everyday technology", "physics you can see in daily life", "biology of the human body",
+  "a turning point in history", "economics that affects ordinary people", "psychology of everyday behaviour",
+  "how a familiar industry actually works", "astronomy and space", "chemistry hiding in the kitchen",
+  "engineering behind ordinary objects", "medicine and how a treatment works", "geology and the planet",
+  "how a law or institution came to exist", "animal behaviour", "the origin of something we use daily",
+];
+
+const CRASH_SYSTEM = `You write study material for a speaking-practice game. The player reads your explainer for a few minutes, then teaches it back out loud in 60 seconds from memory, with nothing on screen.
+
+Pick ONE specific topic the average adult would find genuinely interesting and could NOT already explain — the level of "how noise-cancelling headphones actually work" or "why the Great Emu War went the way it did". Not something everyone already knows (photosynthesis, gravity, when WW2 started). Not so obscure or technical that it can't be understood in one read.
+
+The explainer must:
+- Be ACCURATE. The coach grades the player's explanation against it, so anything stated as fact must be true. If a detail is disputed, leave it out or mark it as debated.
+- Explain a MECHANISM — how and why it works, cause and effect — not a list of facts. The player needs something to actually understand.
+- Be self-contained: define every term you use.
+- Be 220-320 words in 3-5 short paragraphs of plain prose. No headings, no bullets, no markdown.
+- Build to one core idea the player should walk away with.
+
+Reply in exactly this format and nothing else — no JSON, no markdown, no preamble:
+
+TITLE: the topic as a short noun phrase
+HOOK: one sentence on why this is worth knowing
+BODY:
+the explainer, with a blank line between paragraphs`;
+
+const STUDY_START_MS = 10 * 60 * 1000;
+const STUDY_EXTEND_MS = 5 * 60 * 1000;
+
+/* The body is multi-paragraph prose, which is exactly what JSON is worst at:
+   a raw newline or an unescaped quote inside the string makes the whole reply
+   unparseable. A delimited format has no escaping rules to get wrong. JSON is
+   still accepted as a fallback in case the model reaches for it anyway. */
+function parseCrashTopic(raw) {
+  const text = String(raw || "").replace(/```[a-z]*\n?/gi, "").trim();
+
+  const tm = /^[ \t]*TITLE:[ \t]*(.+)$/im.exec(text);
+  const hm = /^[ \t]*HOOK:[ \t]*(.+)$/im.exec(text);
+  const bm = /^[ \t]*BODY:[ \t]*\n?([\s\S]+)$/im.exec(text);
+  if (tm && bm && bm[1].trim()) {
+    return { title: tm[1].trim(), hook: hm ? hm[1].trim() : "", body: bm[1].trim() };
+  }
+
+  const j = parseJsonLoose(text) || parseJsonLoose(escapeRawNewlinesInStrings(text));
+  if (j && j.title && j.body) {
+    return { title: String(j.title).trim(), hook: String(j.hook || "").trim(), body: String(j.body).trim() };
+  }
+  return null;
+}
+
+/* A model writing multi-paragraph prose into JSON almost always emits real
+   newlines inside the string, which is invalid. Walk the text tracking whether
+   we are inside a string and escape those control characters. (An unescaped
+   quote is genuinely ambiguous and deliberately not repaired.) */
+function escapeRawNewlinesInStrings(str) {
+  let out = "", inStr = false;
+  for (let i = 0; i < str.length; i++) {
+    const c = str[i];
+    if (inStr && c === "\\") { out += c + (str[i + 1] || ""); i++; continue; }
+    if (c === '"') { inStr = !inStr; out += c; continue; }
+    if (inStr && (c === "\n" || c === "\r" || c === "\t")) {
+      out += c === "\t" ? "\\t" : c === "\r" ? "\\r" : "\\n";
+      continue;
+    }
+    out += c;
+  }
+  return out;
+}
+
+async function startCrashCourse() {
+  if (!aiAvailable()) {
+    showSettings();
+    const st = document.getElementById("keyStatus");
+    st.textContent = "Crash Course needs an API key — it writes you something new to learn each round.";
+    st.style.color = "var(--warn)";
+    return;
+  }
+  stopEverything();
+  document.getElementById("studyTitle").textContent = "Finding you something to learn…";
+  const st0 = document.getElementById("studyStatus");
+  st0.textContent = "Writing your crash course — a few seconds.";
+  st0.style.color = "";
+  document.getElementById("studyBody").style.display = "none";
+  document.getElementById("studyBar").style.display = "none";
+  show("scr-study");
+
+  const field = CRASH_FIELDS[Math.floor(Math.random() * CRASH_FIELDS.length)];
+  const seen = (save.crashSeen || []).slice(-12);
+  const avoid = seen.length ? `\n\nDo NOT pick any of these, they came up recently: ${seen.join("; ")}.` : "";
+
+  try {
+    const raw = await callClaude({
+      system: CRASH_SYSTEM,
+      messages: [{ role: "user", content: `Write one crash course. Draw it from: ${field}.${avoid}` }],
+      maxTokens: 1500,
+      mockKind: "crash",
+    });
+    const t = parseCrashTopic(raw);
+    if (!t) {
+      // show what actually came back, so a repeat failure is diagnosable
+      console.warn("Crash Course — unparseable reply:\n" + raw);
+      const peek = String(raw || "").trim().replace(/\s+/g, " ").slice(0, 140);
+      throw new Error("The topic came back in a shape I couldn't read. Try again — if it keeps happening, it started with: " + (peek || "(an empty reply)"));
+    }
+    save.crashSeen = [...(save.crashSeen || []), t.title].slice(-24);
+    persist();
+    startStudy(t);
+  } catch (e) {
+    document.getElementById("studyTitle").textContent = "Couldn't build a crash course";
+    const st = document.getElementById("studyStatus");
+    st.textContent = (e && e.message) || "Something went wrong.";
+    st.style.color = "var(--bad)";
+  }
+}
+
+function startStudy(topic) {
+  round = {
+    modeKey: "explain", phase: "prep",
+    segments: [], segIndex: 0,
+    noMic: !micAvailable || micDenied,
+    startedAt: Date.now(),
+    crash: topic,
+    studyEndsAt: Date.now() + STUDY_START_MS,
+  };
+  round.challenge = {};
+  round.plan = [{
+    label: `Explain "${topic.title}" — in your own words.`,
+    sub: "No notes, nothing on screen. Teach it to someone who has never heard of it.",
+    seconds: 60,
+    topic: topic.title,
+  }];
+
+  document.getElementById("studyTitle").textContent = topic.title;
+  const st = document.getElementById("studyStatus");
+  st.textContent = "Read it and understand it — you'll teach it back with the text gone.";
+  st.style.color = "";
+  const body = document.getElementById("studyBody");
+  body.innerHTML =
+    (topic.hook ? `<div class="sb-hook">${escapeHtml(topic.hook)}</div>` : "") +
+    String(topic.body).split(/\n{2,}/).map(p => `<p>${escapeHtml(p.trim())}</p>`).join("");
+  body.style.display = "";
+  document.getElementById("studyBar").style.display = "";
+
+  paintStudyClock();
+  // Wall-clock, not a tick count: background tabs throttle setInterval hard, and
+  // a ten-minute timer counted in ticks would drift minutes off.
+  round._studyIv = every(() => {
+    if (!round || round.phase !== "prep") return;
+    if (paintStudyClock() <= 0) beginExplain();
+  }, 500);
+}
+
+function paintStudyClock() {
+  if (!round) return 0;
+  const left = Math.max(0, round.studyEndsAt - Date.now());
+  const s = Math.ceil(left / 1000);
+  document.getElementById("studyTime").textContent =
+    Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  document.querySelector(".study-clock").classList.toggle("low", left <= 60000);
+  return left;
+}
+
+function extendStudy() {
+  if (!round || round.phase !== "prep") return;
+  round.studyEndsAt += STUDY_EXTEND_MS;
+  paintStudyClock();
+  document.getElementById("studyStatus").textContent =
+    "Five more minutes. Take the time you need — understanding beats memorising.";
+}
+
+function beginExplain() {
+  if (!round || round.phase !== "prep") return;
+  if (round._studyIv) clearInterval(round._studyIv);
+  startSpeaking();
+}
+
 /* ------------------------- DAILY CHALLENGE ------------------------- */
 const DAILY_POOL = [
-  { e:"🥂", name:"The Toast", seconds:60,
+  { e:"🥂", name:"The Toast", seconds:60, topic:"friend dream",
     task:"Raise a glass to your best friend, who just landed their dream job after two brutal years of rejections. Make the room feel it.",
     sub:"Personal detail → the struggle → the triumph → raise the glass.",
     r:"A great toast is PERSONAL and SPECIFIC — judge whether they invented a vivid detail, honored the struggle, and built to an emotional peak. Generic praise = low score." },
-  { e:"🙏", name:"The Apology", seconds:45,
+  { e:"🙏", name:"The Apology", seconds:45, topic:"sorry birthday forgot",
     task:"You completely forgot your best friend's birthday dinner last night. They're hurt and you know it. Apologize — properly.",
     sub:"Own it fully. No 'but', no excuses, no 'I'm sorry you feel...'.",
     r:"A real apology: names the harm, takes full ownership (no excuses, no 'but'), offers repair. Punish deflection, self-pity, or over-apologizing that makes it about them." },
-  { e:"🧒", name:"Explain It Like I'm 5", seconds:60,
+  { e:"🧒", name:"Explain It Like I'm 5", seconds:60, topic:"internet computers",
     task:"Explain how the internet works to a curious 5-year-old. No jargon allowed — they will ask 'why?' in your head the whole time.",
     sub:"One analogy, carried all the way through. Simple words only.",
     r:"Judge simplicity and analogy quality: could an actual child follow it? Punish jargon, abstractions, and analogy-switching mid-stream." },
-  { e:"💰", name:"The Negotiation", seconds:60,
+  { e:"💰", name:"The Negotiation", seconds:60, topic:"price deal",
     task:"The car dealer says the price is final: €14,500. You have €13,000 and you're walking out with this car. Talk them down.",
     sub:"Anchor low, give reasons, use silence and the walk-away.",
     r:"Judge negotiation technique: anchoring, justification, concessions traded not given, willingness to walk. Punish pleading or instantly meeting in the middle." },
-  { e:"🏆", name:"Acceptance Speech", seconds:45,
+  { e:"🏆", name:"Acceptance Speech", seconds:45, topic:"thank award",
     task:"You've just won an award you absolutely did not expect. The mic is live, 200 people are looking at you. Go.",
     sub:"Surprise → gratitude with names → one meaningful note → out.",
     r:"Judge structure under surprise: genuine-feeling gratitude, one specific thank-you, a note of meaning, clean ending. Punish rambling and fake modesty loops." },
-  { e:"🛑", name:"Saying No", seconds:45,
+  { e:"🛑", name:"Saying No", seconds:45, topic:"money friend",
     task:"Your friend asks to borrow money — for the third time, and the first two never came back. Say no. Kindly, clearly, finally.",
     sub:"Warmth + a clear no + no over-explaining. Hold the line.",
     r:"Judge boundary quality: is the 'no' unmistakable, warm, and free of excessive justification? Punish waffling, fake maybes, or coldness." },
-  { e:"🗞️", name:"Breaking News", seconds:45,
+  { e:"🗞️", name:"Breaking News", seconds:45, topic:"tree stuck street",
     task:"You're a live news anchor. Breaking story: a cat is stuck in a tree on Elm Street. Report it with the gravity of a world event.",
     sub:"Full anchor energy: headline, details, 'witness' quote, sign-off.",
     r:"Judge commitment to the bit and news-format structure (headline, developing details, quote, sign-off). Deadpan gravity beats winking at the joke." },
-  { e:"🧭", name:"The Tour Guide", seconds:60,
+  { e:"🧭", name:"The Tour Guide", seconds:60, topic:"room history",
     task:"Give an enthusiastic guided tour of your own bedroom as if it were a national monument with centuries of history.",
     sub:"Invent history. 'And on your left…' energy throughout.",
     r:"Judge inventiveness and commitment: specific invented 'history', tour-guide phrasing, sustained enthusiasm. Punish literal descriptions of furniture." },
-  { e:"😤", name:"The Complaint", seconds:45,
+  { e:"😤", name:"The Complaint", seconds:45, topic:"soup cold manager",
     task:"Your soup arrived cold. You sent it back — it came back cold AGAIN. Get the manager over and handle it: firm, effective, not rude.",
     sub:"Facts → impact → exactly what you want done. Zero insults.",
     r:"Judge assertiveness calibration: clear facts, a specific ask, firm tone with zero abuse. Punish both doormat softness and aggression." },
-  { e:"🛗", name:"The Cold Intro", seconds:30,
+  { e:"🛗", name:"The Cold Intro", seconds:30, topic:"work",
     task:"The elevator doors close. It's you and the one person you've always wanted to work with. You have 30 seconds. Introduce yourself.",
     sub:"Who you are, why them, one concrete ask. No life story.",
     r:"Judge economy: memorable self-intro, a specific reason it's THEM, one clear low-friction ask. Punish résumé-dumping and vague 'pick your brain' asks." },
-  { e:"📦", name:"The Return", seconds:60,
+  { e:"📦", name:"The Return", seconds:60, topic:"blender receipt",
     task:"Convince the shop assistant to take back a blender that is — let's be honest — clearly used. You lost the receipt. Stay charming.",
     sub:"Charm + persistence + give them a reason they CAN say yes to.",
     r:"Judge persuasion under a weak hand: likability, creative but honest-ish framing, making it easy for the clerk to say yes. Punish entitlement." },
-  { e:"🌧️", name:"Silver Linings", seconds:60,
+  { e:"🌧️", name:"Silver Linings", seconds:60, topic:"flight cancel beach",
     task:"Your flight is cancelled and the beach vacation is off. Convince your devastated partner this is actually the best thing that could've happened.",
     sub:"Reframe like you mean it — paint the alternative vividly.",
     r:"Judge the reframe: a genuinely appealing alternative painted in vivid detail, emotional attunement first ('I know, I'm gutted too'). Punish toxic positivity that skips the empathy." },
-  { e:"🐉", name:"The Bedtime Story", seconds:60,
+  { e:"🐉", name:"The Bedtime Story", seconds:60, topic:"dragon fire",
     task:"Improvise a bedtime story about a dragon who is afraid of fire. It needs a beginning, a wobble, and a warm ending.",
     sub:"Name the dragon. Small problem → attempt → cozy resolution.",
     r:"Judge story shape (setup → problem → resolution), a named character, warmth of tone. Punish aimless rambling with no arc." },
@@ -2002,7 +2623,7 @@ function startDaily() {
     daily: d,
   };
   round.challenge = {};
-  round.plan = [{ label: d.task, sub: d.sub, seconds: d.seconds, topic: null }];
+  round.plan = [{ label: d.task, sub: d.sub, seconds: d.seconds, topic: d.topic || null }];
   runPrep();
 }
 
@@ -2027,7 +2648,7 @@ async function startFixDrill(btn) {
 Design a 30–45 second drill where doing that ONE fix is the entire point — a tiny scenario that forces them to practice exactly it, nothing else.
 
 Reply with ONLY a JSON object — no markdown fences, no commentary:
-{"task":"the drill instruction, second person, direct — a concrete micro-scenario","sub":"one line: what success sounds like","seconds":40}`;
+{"task":"the drill instruction, second person, direct — a concrete micro-scenario","sub":"one line: what success sounds like","topic":"2-4 lowercase SUBJECT words a good answer will almost certainly say out loud — nouns from the scenario itself, never words from the instruction. Each over 3 letters. Omit any word a strong answer might reasonably skip","seconds":40}`;
     const raw = await callClaude({ messages: [{ role: "user", content: gen }], maxTokens: 400, mockKind: "fixdrill" });
     const ch = parseJsonLoose(raw);
     if (!ch || !ch.task) throw new Error("Couldn't build the drill — try again.");
@@ -2048,7 +2669,7 @@ function startWeakRound(ch, fix, srcName) {
     weak: { ch, fix, srcName },
   };
   round.challenge = {};
-  round.plan = [{ label: ch.task, sub: ch.sub || ("One job: " + fix), seconds: ch.seconds, topic: null }];
+  round.plan = [{ label: ch.task, sub: ch.sub || ("One job: " + fix), seconds: ch.seconds, topic: ch.topic || null }];
   runPrep();
 }
 
@@ -2723,9 +3344,40 @@ let save = loadSave();
 function loadSave() {
   try {
     const s = JSON.parse(localStorage.getItem(SAVE_KEY));
-    if (s && typeof s === "object") return Object.assign(defaultSave(), s);
+    if (s && typeof s === "object" && !Array.isArray(s)) return sanitizeSave(s);
   } catch (e) {}
   return defaultSave();
+}
+
+/* A corrupt or hand-edited save used to take the whole game down: Object.assign
+   merged whatever was there straight over the defaults, so `{"history":"x"}`
+   threw inside renderTopbar() at boot and nothing after it ever ran — a blank
+   page with no way back except clearing storage. Coerce every field instead. */
+function sanitizeSave(s) {
+  const d = defaultSave();
+  const num = (v, f) => (typeof v === "number" && Number.isFinite(v) ? v : f);
+  const arr = (v, f) => (Array.isArray(v) ? v : f);
+  const obj = (v, f) => (v && typeof v === "object" && !Array.isArray(v) ? v : f);
+  const str = (v, f) => (typeof v === "string" ? v : f);
+  return {
+    ...d,
+    ...s,
+    xp: num(s.xp, d.xp),
+    rounds: num(s.rounds, d.rounds),
+    streak: num(s.streak, d.streak),
+    lastPlayDay: str(s.lastPlayDay, d.lastPlayDay),
+    history: arr(s.history, d.history).filter((r) => r && typeof r === "object"),
+    badges: obj(s.badges, d.badges),
+    modesPlayed: obj(s.modesPlayed, d.modesPlayed),
+    lessonsDone: arr(s.lessonsDone, d.lessonsDone),
+    coachLog: arr(s.coachLog, d.coachLog).filter((e) => e && typeof e === "object"),
+    baseline: obj(s.baseline, null),
+    baselineCoach: obj(s.baselineCoach, null),
+    realPreps: arr(s.realPreps, d.realPreps).filter((p) => p && typeof p === "object" && typeof p.desc === "string"),
+    crashSeen: arr(s.crashSeen, []).filter((t) => typeof t === "string"),
+    recentScenes: obj(s.recentScenes, d.recentScenes),
+    muted: !!s.muted,
+  };
 }
 function defaultSave() {
   return { xp:0, rounds:0, streak:0, lastPlayDay:null, history:[], badges:{}, modesPlayed:{}, lessonsDone:[],
@@ -2779,6 +3431,90 @@ function drawWords(n) {
     if (!out.includes(w)) out.push(w);
   }
   return out;
+}
+
+/* ------------------------- sound -------------------------
+   Synthesised with the Web Audio API rather than shipped as files: nothing to
+   download, nothing to license, and the tones suit the scene better than stock
+   UI blips would.
+
+   The hard rule is at the top of play(): NOTHING sounds while the microphone is
+   live. A chime is a pure, steady pitch — exactly what the tone analysis
+   measures — so it would both pollute the pitch score and get transcribed as
+   noise. Every cue therefore fires at a phase boundary, never during a speech. */
+const sfx = (() => {
+  let ctx = null;
+  const muted = () => !!save.muted;
+
+  function audio() {
+    if (ctx) { if (ctx.state === "suspended") ctx.resume(); return ctx; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    try { ctx = new AC(); } catch (e) { return null; }
+    return ctx;
+  }
+
+  // one note, with an attack/decay envelope — a raw gain switch would click
+  function note(freq, atMs, durMs, { type = "sine", gain = 0.14, glideTo = null } = {}) {
+    const ac = audio(); if (!ac) return;
+    const t0 = ac.currentTime + atMs / 1000;
+    const t1 = t0 + durMs / 1000;
+    const osc = ac.createOscillator();
+    const amp = ac.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    if (glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, t1);
+    amp.gain.setValueAtTime(0.0001, t0);
+    amp.gain.exponentialRampToValueAtTime(gain, t0 + 0.012);
+    amp.gain.exponentialRampToValueAtTime(0.0001, t1);
+    osc.connect(amp).connect(ac.destination);
+    osc.start(t0); osc.stop(t1 + 0.02);
+  }
+
+  const CUES = {
+    tick:  () => note(660, 0, 70, { gain: 0.06 }),
+    ready: () => note(880, 0, 90, { gain: 0.08 }),
+    go:    () => { note(660, 0, 110); note(990, 90, 190, { glideTo: 1120 }); },
+    done:  () => { note(560, 0, 130); note(380, 110, 260); },
+    badge: () => [0, 70, 140, 210].forEach((d, i) => note([784, 988, 1175, 1568][i], d, 220, { gain: 0.10 })),
+    nav:   () => note(520, 0, 45, { type: "triangle", gain: 0.05 }),
+    // the grade sting climbs with the result; C stays gentle rather than buzzing
+    // at someone who just tried something hard
+    grade: (g) => {
+      const runs = {
+        S: [523, 659, 784, 1047],
+        A: [523, 659, 784],
+        B: [523, 659],
+        C: [440],
+      };
+      (runs[g] || runs.C).forEach((f, i) => note(f, i * 95, 300, { gain: 0.12 }));
+    },
+  };
+
+  function play(name, arg) {
+    if (muted()) return;
+    // never sound over a live microphone
+    if (round && round.phase === "speak") return;
+    if (typeof sim !== "undefined" && sim && sim.rec) return;
+    const cue = CUES[name];
+    if (cue) { try { cue(arg); } catch (e) {} }
+  }
+
+  return { play, isMuted: muted };
+})();
+
+function toggleMute() {
+  save.muted = !save.muted;
+  persist();
+  renderMuteBtn();
+  if (!save.muted) sfx.play("ready");   // confirm it's back on
+}
+function renderMuteBtn() {
+  const b = document.getElementById("muteBtn");
+  if (!b) return;
+  b.textContent = save.muted ? "🔇" : "🔊";
+  b.title = save.muted ? "Sound off — click to turn on" : "Sound on — click to mute";
+  b.setAttribute("aria-pressed", String(!!save.muted));
 }
 
 /* ------------------------- speech recognition ------------------------- */
@@ -2945,6 +3681,12 @@ function show(id) {
   window.scrollTo({ top: 0 });
 }
 function goHome() { stopEverything(); renderTopbar(); renderHomeExtras(); show("scr-home"); }
+/* Nav "Start training": home, then put the quick rounds under the reader's nose. */
+function startTraining() {
+  goHome();
+  const modes = document.getElementById("modes");
+  if (modes) requestAnimationFrame(() => modes.scrollIntoView({ behavior: "smooth", block: "center" }));
+}
 
 /* ------------------------- round state machine ------------------------- */
 let round = null;   // current round object
@@ -2984,6 +3726,7 @@ function stopEverything() {
 }
 
 function startRound(modeKey) {
+  sfx.play("nav");
   stopEverything();
   const mode = MODES[modeKey];
   round = {
@@ -3034,12 +3777,14 @@ function runPrep() {
   const isLong = n > prepSeconds();
   readyBtn.style.display = isLong ? "" : "none";
   hint.textContent = isLong ? "Read the whole thing — start when you're ready." : "Get ready to speak…";
-  if (n === 0) { el.textContent = "GO!"; later(startSpeaking, 600); return; }
+  if (n === 0) { el.textContent = "GO!"; sfx.play("go"); later(startSpeaking, 600); return; }
   el.textContent = n;
+  if (n <= 3) sfx.play("tick");
   round._prepIv = every(() => {
     n--;
-    if (n <= 0) { clearInterval(round._prepIv); el.textContent = "GO!"; later(startSpeaking, 500); }
-    else { el.textContent = n; el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; }
+    if (n <= 0) { clearInterval(round._prepIv); el.textContent = "GO!"; sfx.play("go"); later(startSpeaking, 500); }
+    // only the final beats tick — a 40-second reading prep would be maddening
+    else { if (n <= 3) sfx.play("tick"); el.textContent = n; el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; }
   }, 1000);
 }
 function skipPrep() {
@@ -3047,6 +3792,7 @@ function skipPrep() {
   if (round._prepIv) clearInterval(round._prepIv);
   document.getElementById("prepReadyBtn").style.display = "none";
   document.getElementById("prepCount").textContent = "GO!";
+  sfx.play("go");
   later(startSpeaking, 250);
 }
 
@@ -3121,6 +3867,7 @@ function endSpeaking(early) {
   clearInterval(round.tick);
   document.getElementById("scr-speak").classList.remove("urgent");
   round.phase = "between";
+  sfx.play("done");   // after the recogniser is stopped and the phase has moved on
 
   round.segIndex++;
   if (round.segIndex < round.plan.length) {
@@ -3198,7 +3945,7 @@ function analyze() {
     { key: "pace",    label: "🌊 Pace",          pts: pace,       max: 20, note: `${wpm} words/min` },
     { key: "clean",   label: "🧹 Clean speech",  pts: clean,      max: 20, note: `${fillers.length} fillers, ${rep.reps} stumbles (${dpm}/min)` },
     { key: "tone",    label: "🎵 Tone & energy", pts: tone.score, max: 20, note: tone.note, available: tone.score !== null },
-    { key: "topic",   label: "🎯 On topic",      pts: topic.pts,  max: 25, note: topic.note },
+    { key: "topic",   label: "🎯 On topic",      pts: topic.pts,  max: 25, note: topic.note, available: topic.pts !== null },
     { key: "stamina", label: "🔋 Stamina",       pts: stamina,    max: 15, note: stamina >= 14 ? "Used the full time" : "Stopped early" },
   ];
   const avail = comps.filter(c => c.available !== false);
@@ -3259,7 +4006,10 @@ function topicRelevance(topicText, responseText) {
 // per-segment topic score: off-topic OR underdeveloped answers get marked down hard (0-25)
 function topicScore(segs, totalWords) {
   const scored = segs.filter(s => s.topic);
-  if (!scored.length) return { pts: Math.min(25, Math.round(totalWords / 60 * 25)), note: "Answered.", factor: 1, offTopicSegs: 0 };
+  // No subject to check against — say so and drop the component, the way Tone
+  // drops out without mic audio. This used to award words/60 × 25 instead,
+  // which handed out the full 25 for any 60 words on any subject at all.
+  if (!scored.length) return { pts: null, note: "Not measured (no fixed subject)", factor: 1, offTopicSegs: 0 };
   const minWords = 18;
   let sumFactor = 0, offTopicSegs = 0;
   scored.forEach(s => {
@@ -3405,6 +4155,7 @@ function finishRound(selfScore) {
   // --- render feedback
   document.getElementById("fbMode").textContent = mode.emoji + " " + mode.tag;
   document.getElementById("gradeBig").textContent = grade;
+  sfx.play("grade", grade);
   document.getElementById("scoreLine").textContent = `${score} / 100`;
   const sd = document.getElementById("scoreDelta");
   if (priorBest !== null && score > priorBest) {
@@ -3440,6 +4191,7 @@ function finishRound(selfScore) {
   }
   document.getElementById("xpGain").textContent = `+${score} XP` + (dailyBonus ? ` (+${dailyBonus} daily bonus 🎉)` : "");
   document.getElementById("newBadges").innerHTML = earned.map(b => `<div class="badge-pop">${b.bi} Badge unlocked: ${b.bn}</div>`).join("");
+  if (earned.length) later(() => sfx.play("badge"), 700);   // let the grade sting land first
 
   // --- AI coaching prompt: only when there's a real transcript to coach
   lastCoachPrompt = (!isSelf && a.fullText.trim()) ? buildCoachPrompt(a) : null;
@@ -3494,6 +4246,7 @@ function playAgain() {
     return;
   }
   if (round && round.modeKey === "daily") { startDaily(); return; }
+  if (round && round.modeKey === "explain") { startCrashCourse(); return; }   // a fresh topic to learn
   const k = round && MODES[round.modeKey] && !MODES[round.modeKey].hidden ? round.modeKey : "sell";
   startRound(k);
 }
@@ -3551,11 +4304,11 @@ function showStats() {
       const good = higherBetter ? diff > 0 : diff < 0;
       const col = diff === 0 ? "var(--muted)" : good ? "var(--good)" : "var(--bad)";
       const arrow = diff === 0 ? "＝" : diff > 0 ? "▲" : "▼";
-      rows.push(`<div class="best-row"><span>${label}</span><b>${a}${suffix} → ${b}${suffix} <span style="color:${col}">${arrow}</span></b></div>`);
+      rows.push(`<div class="best-row"><span>${label}</span><b>${escapeHtml(a)}${suffix} → ${escapeHtml(b)}${suffix} <span style="color:${col}">${arrow}</span></b></div>`);
     };
     cmp("Game score", save.baseline.s, nowS, true);
     cmp("Stumbles / min", save.baseline.fpm, nowF, false);
-    rows.push(`<div class="best-row"><span>Speaking pace <span style="color:var(--muted);font-size:12px;">(target 110–160)</span></span><b>${save.baseline.wpm} → ${nowW} wpm</b></div>`);
+    rows.push(`<div class="best-row"><span>Speaking pace <span style="color:var(--muted);font-size:12px;">(target 110–160)</span></span><b>${escapeHtml(save.baseline.wpm)} → ${nowW} wpm</b></div>`);
   }
   if (save.baselineCoach && (save.coachLog || []).length >= 1) {
     const cl = save.coachLog;
@@ -3563,11 +4316,11 @@ function showStats() {
     const nowC = +(now3.reduce((x, e) => x + e.score, 0) / now3.length).toFixed(1);
     const diff = +(nowC - save.baselineCoach.score).toFixed(1);
     const col = diff === 0 ? "var(--muted)" : diff > 0 ? "var(--good)" : "var(--bad)";
-    rows.push(`<div class="best-row"><span>Coach's score <span style="color:var(--muted);font-size:12px;">(strict, /10)</span></span><b>${save.baselineCoach.score} → ${nowC} <span style="color:${col}">${diff === 0 ? "＝" : diff > 0 ? "▲" : "▼"}</span></b></div>`);
+    rows.push(`<div class="best-row"><span>Coach's score <span style="color:var(--muted);font-size:12px;">(strict, /10)</span></span><b>${escapeHtml(save.baselineCoach.score)} → ${nowC} <span style="color:${col}">${diff === 0 ? "＝" : diff > 0 ? "▲" : "▼"}</span></b></div>`);
   }
   const lastFix = (save.coachLog || []).slice(-1)[0];
   let ibHtml = rows.length
-    ? `<div style="color:var(--muted);font-size:13px;margin-bottom:8px;">Your first ${save.baseline ? "3 rounds (" + save.baseline.d + ")" : "rounds"} vs your last 3.</div><div id="bestGridLike" style="display:grid;gap:8px;">${rows.join("")}</div>`
+    ? `<div style="color:var(--muted);font-size:13px;margin-bottom:8px;">Your first ${save.baseline ? "3 rounds (" + escapeHtml(save.baseline.d) + ")" : "rounds"} vs your last 3.</div><div id="bestGridLike" style="display:grid;gap:8px;">${rows.join("")}</div>`
     : `<div style="color:var(--muted);font-size:14px;">Play at least 3 mic rounds — your first ones get frozen as a baseline, and this card shows exactly how far you've come since.</div>`;
   if (lastFix && lastFix.fix) {
     ibHtml += `<div style="margin-top:12px;padding:10px 14px;border-left:4px solid var(--accent-2);background:rgba(127,168,255,.07);border-radius:0 10px 10px 0;font-size:14px;"><b style="color:var(--accent-2)">🎯 Coach's current focus:</b> ${escapeHtml(lastFix.fix)}</div>`;
@@ -3614,15 +4367,104 @@ function renderTopbar() {
   document.getElementById("xpNum").textContent = save.xp;
   document.getElementById("streakNum").textContent = save.streak;
   document.getElementById("xpbar").style.width = Math.round(li.into / li.need * 100) + "%";
+  renderMuteBtn();
+  const h = save.history || [];
+  document.getElementById("homeRounds").textContent = save.rounds;
+  document.getElementById("homeAvg").textContent =
+    h.length ? Math.round(h.reduce((a, r) => a + r.s, 0) / h.length) : "–";
 }
+/* One illustration per quick round, drawn in that mode's accent so a glance at
+   the card tells you what the game actually is. Keyed by mode; anything without
+   art just renders without it. */
+const MODE_TINT = {
+  sell:   "rgba(255,176,32,.20)",
+  rapid:  "rgba(209,144,238,.24)",
+  story:  "rgba(127,168,255,.22)",
+  debate: "rgba(45,212,167,.20)",
+};
+const MODE_ART = {
+  // a random object in a spotlight, with a price tag
+  sell: `<svg viewBox="0 0 200 130" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs><linearGradient id="qwSellBeam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffb020" stop-opacity=".42"/><stop offset="1" stop-color="#ffb020" stop-opacity="0"/>
+    </linearGradient></defs>
+    <path d="M90 -10 L110 -10 L152 118 L48 118 Z" fill="url(#qwSellBeam)"/>
+    <ellipse cx="100" cy="110" rx="34" ry="7" fill="none" stroke="#ffb020" stroke-opacity=".45" stroke-width="1.4"/>
+    <ellipse cx="100" cy="110" rx="15" ry="3.2" fill="#ffb020" fill-opacity=".3"/>
+    <g transform="rotate(-26 100 72)">
+      <rect x="94" y="42" width="13" height="42" rx="6.5" fill="#fff" fill-opacity=".92"/>
+      <rect x="94" y="42" width="13" height="13" rx="6.5" fill="#ffb020"/>
+      <path d="M94 84 L100.5 97 L107 84 Z" fill="#ffd98a"/>
+    </g>
+    <g fill="#ffe3ad">
+      <path d="M50 36 l2.6 6.4 6.4 2.6 -6.4 2.6 -2.6 6.4 -2.6-6.4 -6.4-2.6 6.4-2.6z" opacity=".85"/>
+      <circle cx="42" cy="72" r="1.7" opacity=".7"/><circle cx="164" cy="64" r="1.4" opacity=".55"/>
+    </g>
+    <g transform="rotate(13 150 92)">
+      <path d="M136 80 h24 a4 4 0 0 1 4 4 v15 a4 4 0 0 1 -4 4 h-24 l-9-11.5 z" fill="#ffb020" fill-opacity=".16" stroke="#ffb020" stroke-opacity=".6" stroke-width="1.3"/>
+      <circle cx="135" cy="91.5" r="2.3" fill="#ffb020"/>
+      <text x="150" y="97" font-size="13" font-weight="700" fill="#ffd98a" text-anchor="middle" font-family="system-ui, sans-serif">$</text>
+    </g>
+  </svg>`,
+  // three questions rushing in, clock running
+  rapid: `<svg viewBox="0 0 200 130" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g stroke="#e6b8ff" stroke-linecap="round">
+      <line x1="8" y1="34" x2="54" y2="34" stroke-width="3" stroke-opacity=".34"/>
+      <line x1="2" y1="52" x2="40" y2="52" stroke-width="2.4" stroke-opacity=".24"/>
+      <line x1="14" y1="92" x2="50" y2="92" stroke-width="2.4" stroke-opacity=".22"/>
+    </g>
+    <g font-family="system-ui, sans-serif" font-weight="700" text-anchor="middle">
+      <text x="58" y="84" font-size="40" fill="#b184f0" fill-opacity=".44">?</text>
+      <text x="94" y="90" font-size="56" fill="#d190ee" fill-opacity=".68">?</text>
+      <text x="140" y="96" font-size="74" fill="#fff" fill-opacity=".95">?</text>
+    </g>
+    <g transform="translate(172 28)">
+      <circle r="14" fill="none" stroke="#d190ee" stroke-opacity=".32" stroke-width="3"/>
+      <circle r="14" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="3" stroke-linecap="round"
+              stroke-dasharray="88" stroke-dashoffset="56" transform="rotate(-90)"/>
+    </g>
+  </svg>`,
+  // three random words strung into one thread
+  story: `<svg viewBox="0 0 200 130" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <path d="M36 92 C64 46, 82 96, 100 62 S150 34, 168 52" fill="none"
+          stroke="#7fa8ff" stroke-opacity=".55" stroke-width="1.7" stroke-linecap="round" stroke-dasharray="3 6"/>
+    <circle cx="36" cy="92" r="15" fill="#7fa8ff" fill-opacity=".15" stroke="#7fa8ff" stroke-opacity=".55" stroke-width="1.3"/>
+    <path d="M40 86.5a6.6 6.6 0 1 0 0 11 8 8 0 0 1 0-11z" fill="#dfe9ff"/>
+    <circle cx="100" cy="62" r="19" fill="#7fa8ff" fill-opacity=".22" stroke="#cfe0ff" stroke-opacity=".8" stroke-width="1.6"/>
+    <path d="M103 51 l-8 12 h6 l-3 10 9 -13 h-6 z" fill="#fff"/>
+    <circle cx="168" cy="52" r="13" fill="#7fa8ff" fill-opacity=".14" stroke="#7fa8ff" stroke-opacity=".5" stroke-width="1.2"/>
+    <path d="M168 45 l1.9 4.7 4.7 1.9 -4.7 1.9 -1.9 4.7 -1.9-4.7 -4.7-1.9 4.7-1.9z" fill="#dfe9ff"/>
+    <g fill="#cfe0ff"><circle cx="66" cy="30" r="1.6" opacity=".7"/><circle cx="130" cy="102" r="1.4" opacity=".55"/></g>
+  </svg>`,
+  // the scales tip, then the sides swap
+  debate: `<svg viewBox="0 0 200 130" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <path d="M44 78 a56 56 0 0 1 112 0" fill="none" stroke="#2dd4a7" stroke-opacity=".3"
+          stroke-width="2" stroke-linecap="round" stroke-dasharray="3 8"/>
+    <g fill="#8df0d0"><path d="M46 84 l9 -12 v24 z" opacity=".85"/><path d="M154 84 l-9 12 v-24 z" opacity=".85"/></g>
+    <g stroke="#4fe0bb" stroke-opacity=".85" fill="none" stroke-width="2" stroke-linecap="round">
+      <line x1="100" y1="52" x2="100" y2="106"/><line x1="80" y1="106" x2="120" y2="106"/>
+      <g transform="rotate(-13 100 56)">
+        <line x1="62" y1="56" x2="138" y2="56"/>
+        <path d="M62 56 l-11 17 h22 z" fill="#2dd4a7" fill-opacity=".26"/>
+        <path d="M138 56 l-11 17 h22 z" fill="#2dd4a7" fill-opacity=".10"/>
+      </g>
+    </g>
+    <circle cx="100" cy="49" r="4.5" fill="#8df0d0" fill-opacity=".55"/>
+  </svg>`,
+};
+
 function renderModes() {
   const tier = unlockTier();
+  const tierText = tier === 3 ? "EXPERT POOL" : tier === 2 ? "HARD POOL" : "unlocks harder prompts at lvl 5";
   document.getElementById("modes").innerHTML = Object.entries(MODES).filter(([, m]) => !m.hidden).map(([k, m]) =>
-    `<button class="mode-card" onclick="startRound('${k}')">
-      <span class="emoji">${m.emoji}</span>
-      <h3>${m.name}</h3>
-      <p>${m.desc}</p>
-      <div class="meta">${m.meta} · ${tier === 3 ? "EXPERT POOL" : tier === 2 ? "HARD POOL" : "unlocks harder prompts at lvl 5"}</div>
+    `<button class="mode-card" style="--tint:${MODE_TINT[k] || "rgba(124,92,255,.18)"}" onclick="startRound('${k}')">
+      ${MODE_ART[k] ? `<span class="art" aria-hidden="true">${MODE_ART[k]}</span>` : ""}
+      <span class="chip"><span class="ce">${m.emoji}</span>${m.meta}</span>
+      <div class="mc-body">
+        <h3>${m.name}</h3>
+        <p>${m.desc}</p>
+        <div class="meta">${tierText}</div>
+      </div>
     </button>`).join("");
 }
 

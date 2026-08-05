@@ -18,9 +18,33 @@ The game auto-detects which situation it's in at load (it probes `/api/claude`).
 1. Push this folder to a GitHub repo (`index.html` at the root, `api/claude.js` as is).
 2. On [vercel.com](https://vercel.com) → **Add New Project** → import the repo. No framework, no build step — accept defaults.
 3. In the project's **Settings → Environment Variables**, add:
-   - `ANTHROPIC_API_KEY` — a key from console.anthropic.com (make a **separate** key just for this, so you can revoke it without touching your personal one)
-   - `DAILY_LIMIT` — optional, free coachings per visitor per day (default 25)
+   - `ANTHROPIC_API_KEY` — **required.** A key from console.anthropic.com (make a **separate** key just for this, so you can revoke it without touching your personal one)
+   - `LICENSE_SECRET` — **required for Pro.** A long random string that signs and verifies licence keys. Generate with:
+     `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+     Never commit it. If it leaks, anyone can mint themselves unlimited Pro keys, and the only fix is rotating it — which invalidates every paying customer's key at once.
+   - `UPGRADE_URL` — your checkout link (Paddle / Lemon Squeezy / Stripe). Without it the paywall shows but can't sell.
+   - `FREE_DAILY` — optional, free AI rounds per visitor per day (default 3)
+   - `PRO_DAILY` — optional, AI rounds per licence per day (default 200; caps the damage if a key gets shared)
    - `COACH_MODEL` — optional, defaults to `claude-opus-4-8`; set `claude-haiku-4-5` if you want the public tier ~5× cheaper
+
+## Selling Pro
+
+The paywall is enforced in `api/claude.js`, never in the browser. Local delivery
+scoring (pace, fillers, tone, stamina) is free and unlimited because it costs
+nothing and runs entirely client-side; only the AI features are metered.
+
+When someone pays, mint them a key on **your** machine:
+
+```bash
+LICENSE_SECRET=<the same secret you set in Vercel> node scripts/make-license.js 1 buyer@example.com
+```
+
+Send them the `licence` line; they paste it into ⚙️ Settings. Record the printed
+`id` against their name — that's how you'd identify a shared key later.
+
+Fulfilment is manual by design at this stage. It's fine for the first customers
+and becomes painful past a few dozen; that's the point to add accounts and a
+database.
 4. Deploy. Open the site — the ⚙️ settings key is now optional for visitors.
 
 ## Protect your wallet

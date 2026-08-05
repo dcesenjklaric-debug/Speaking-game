@@ -1,0 +1,11 @@
+{
+  "name": "quick-wit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Quick Wit — impromptu speaking trainer",
+  "type": "module",
+  "scripts": {
+    "start": "node serve.js",
+    "license": "node scripts/make-license.js"
+  }
+}
