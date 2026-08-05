@@ -69,29 +69,75 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.on("error", (err) => {
-  if (err.code === "EADDRINUSE") {
-    console.error(
-      `\nPort ${PORT} is already in use — the game may already be running.\n` +
-        `Open http://localhost:${PORT} , or start on another port:  node serve.js 8423\n`
+// `done` matters when the caller exits straight afterwards: exec is async, so
+// exiting immediately kills the shell before it can launch the browser.
+function openBrowser(url, done = () => {}) {
+  if (process.env.NO_OPEN) return done();
+  const cmd =
+    process.platform === "win32" ? `start "" "${url}"`
+    : process.platform === "darwin" ? `open "${url}"`
+    : `xdg-open "${url}"`;
+  let settled = false;
+  const finish = () => { if (!settled) { settled = true; done(); } };
+  exec(cmd, finish);
+  setTimeout(finish, 3000).unref(); // don't hang the window if the shell never reports back
+}
+
+// Is something already serving Quick Wit on this port? A stray server left
+// running from an earlier session used to make every later launch bail out
+// without ever opening a browser, which just looks like the game is broken.
+function probe(port) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (v) => {
+      if (!settled) { settled = true; resolve(v); }
+    };
+    const req = http.get(
+      { host: "localhost", port, path: "/", timeout: 1500 },
+      (res) => {
+        let body = "";
+        res.setEncoding("utf8");
+        // Match while streaming. The page is ~220KB, so waiting for "end"
+        // after aborting the read would mean waiting for an event that
+        // never arrives — the title is in the first KB anyway.
+        res.on("data", (c) => {
+          body += c;
+          if (body.includes("Quick Wit")) { finish(true); req.destroy(); }
+          else if (body.length > 65536) { finish(false); req.destroy(); }
+        });
+        res.on("end", () => finish(body.includes("Quick Wit")));
+      }
     );
-  } else {
+    req.on("timeout", () => { finish(false); req.destroy(); });
+    req.on("error", () => finish(false));
+    req.on("close", () => finish(false));
+  });
+}
+
+server.on("error", async (err) => {
+  if (err.code !== "EADDRINUSE") {
     console.error("\nServer error:", err.message);
+    process.exit(1);
   }
-  process.exit(1);
+  const url = `http://localhost:${PORT}`;
+  if (await probe(PORT)) {
+    // already running and healthy — just show it
+    console.log(`\n  Quick Wit is already running at ${url} — opening it.`);
+    console.log("  (That server lives in another window; close it to stop the game.)\n");
+    openBrowser(url, () => process.exit(0));
+    return;
+  }
+  // port taken by something else entirely: step aside rather than give up
+  const next = PORT + 1;
+  console.log(`\n  Port ${PORT} is taken by another program — starting on ${next} instead.`);
+  server.listen(next);
 });
 
 server.listen(PORT, () => {
-  const url = `http://localhost:${PORT}`;
+  const url = `http://localhost:${server.address().port}`;
   console.log(`\n  Quick Wit is running at ${url}`);
   console.log("  Keep this window open while playing. Press Ctrl+C to stop.\n");
   // Opened only once the server is actually listening, so the browser never
   // races ahead and lands on "can't reach this page".
-  if (!process.env.NO_OPEN) {
-    const cmd =
-      process.platform === "win32" ? `start "" "${url}"`
-      : process.platform === "darwin" ? `open "${url}"`
-      : `xdg-open "${url}"`;
-    exec(cmd);
-  }
+  openBrowser(url);
 });
