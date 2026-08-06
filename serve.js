@@ -7,12 +7,16 @@
  * Usage:  node serve.js [port]
  */
 
-const http = require("http");
-const fs = require("fs");
-const path = require("path");
-const { exec } = require("child_process");
+import http from "node:http";
+import fs from "node:fs";
+import path from "node:path";
+import { exec } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
-const ROOT = __dirname;
+// package.json now sets "type": "module" (api/*.js on Vercel need ESM import),
+// which made Node load this file as an ES module too — CommonJS's require()
+// and __dirname don't exist there, hence fileURLToPath instead.
+const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PORT = parseInt(process.argv[2], 10) || 8422;
 
 const TYPES = {
