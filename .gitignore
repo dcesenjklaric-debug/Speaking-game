@@ -8,6 +8,10 @@
 
 node_modules/
 .vercel/
+
+# Obsidian's own workspace/UI state if you open this repo as a vault — local
+# to your machine, not part of the actual notes.
+.obsidian/
 .DS_Store
 Thumbs.db
 *.log
